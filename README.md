@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="./frontend/src/assets/hero.png" alt="ArchLab Hero" width="800" />
 
   <h1>🚀 ArchLab</h1>
   <p><strong>The Next-Generation Interactive System Architecture Design & Simulation Platform</strong></p>
