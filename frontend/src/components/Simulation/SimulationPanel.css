@@ -1,0 +1,244 @@
+/* SimulationPanel — Floating control panel styles */
+
+.simulation-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(13, 13, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(0, 0, 0, 0.3);
+  z-index: var(--z-overlay);
+  animation: slideInUp var(--transition-base) ease;
+  transition: all var(--transition-base);
+}
+
+.simulation-panel-active {
+  border-color: var(--color-primary-muted);
+  box-shadow: var(--shadow-xl), 0 0 30px var(--color-primary-glow);
+}
+
+/* --- Controls --- */
+.sim-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sim-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: white;
+}
+
+.sim-btn-play {
+  background: var(--color-success);
+}
+.sim-btn-play:hover {
+  background: #0ea573;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.sim-btn-pause {
+  background: var(--color-warning);
+}
+.sim-btn-pause:hover {
+  background: #d97706;
+  transform: scale(1.05);
+}
+
+.sim-btn-stop {
+  background: var(--color-danger);
+}
+.sim-btn-stop:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+/* --- Status Indicator --- */
+.sim-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+}
+
+.sim-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: background var(--transition-fast);
+}
+
+.sim-status-idle { background: var(--color-text-tertiary); }
+.sim-status-running {
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+  animation: pulse 2s infinite;
+}
+.sim-status-paused {
+  background: var(--color-warning);
+  box-shadow: 0 0 6px var(--color-warning);
+}
+
+.sim-status-text {
+  font-size: 10px;
+  font-weight: var(--font-bold);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.1em;
+}
+
+/* --- RPS Slider --- */
+.sim-rps-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+}
+
+.sim-rps-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+.sim-rps-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sim-rps-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 0 6px var(--color-primary-glow);
+}
+
+.sim-rps-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+.sim-rps-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  cursor: pointer;
+}
+
+.sim-rps-value {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-semibold);
+  color: var(--color-primary-hover);
+  white-space: nowrap;
+  min-width: 72px;
+  text-align: right;
+}
+
+/* --- Speed Controls --- */
+.sim-speed-section {
+  display: flex;
+  gap: 2px;
+}
+
+.sim-speed-btn {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-semibold);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sim-speed-btn:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-secondary);
+}
+
+.sim-speed-btn.active {
+  background: var(--color-primary-muted);
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary);
+}
+
+/* --- Live Metrics --- */
+.sim-metrics {
+  display: flex;
+  gap: var(--space-3);
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--color-border);
+  animation: fadeIn var(--transition-base) ease;
+}
+
+.sim-metric {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-text-tertiary);
+}
+
+.sim-metric-value {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.sim-metric-value.text-danger {
+  color: var(--color-danger);
+}
+
+.sim-metric-label {
+  font-size: 9px;
+  color: var(--color-text-tertiary);
+}
+
+/* Node status counts */
+.sim-node-counts {
+  display: flex;
+  gap: 3px;
+}
+
+.count-healthy { color: var(--color-success); }
+.count-warning { color: var(--color-warning); }
+.count-critical { color: var(--color-danger); }
+.count-down { color: #ef4444; opacity: 0.6; }

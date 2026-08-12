@@ -1,10 +1,12 @@
 /**
- * PropertiesPanel — Right Sidebar for Component Configuration
- * ==============================================================
- * 
+ * PropertiesPanel — Right Sidebar for Component Configuration (Phase 2 Enhanced)
+ * ================================================================================
+ *
  * When a user selects a node on the canvas, this panel shows its properties.
- * Users can edit labels, descriptions, and specific configurations
- * (like DB replication, LB algorithm, etc.).
+ * Phase 2 additions:
+ *   - Live simulation metrics with color-coded badges
+ *   - Status indicator
+ *   - Saturation visual
  */
 
 import { useState, useEffect } from 'react';
@@ -19,6 +21,15 @@ interface PropertiesPanelProps {
   nodes: Node[];
   onUpdateNodeData: (nodeId: string, newData: Partial<ArchNodeData>) => void;
   onClose: () => void;
+  /** Whether simulation is currently active */
+  isSimulating?: boolean;
+}
+
+/** Format large numbers */
+function formatMetric(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(Math.round(n));
 }
 
 export default function PropertiesPanel({
@@ -26,16 +37,14 @@ export default function PropertiesPanel({
   nodes,
   onUpdateNodeData,
   onClose,
+  isSimulating = false,
 }: PropertiesPanelProps) {
-  // Find the selected node
   const node = nodes.find((n) => n.id === selectedNodeId);
   const nodeData = node?.data as ArchNodeData | undefined;
 
-  // Local state for form inputs to avoid laggy typing
   const [localLabel, setLocalLabel] = useState('');
   const [localDesc, setLocalDesc] = useState('');
 
-  // Sync local state when selected node changes
   useEffect(() => {
     if (nodeData) {
       setLocalLabel(nodeData.label || '');
@@ -73,7 +82,6 @@ export default function PropertiesPanel({
     });
   };
 
-  // Helper to render configuration fields dynamically based on config type
   const renderConfigField = (key: string, value: unknown) => {
     if (typeof value === 'boolean') {
       return (
@@ -102,7 +110,6 @@ export default function PropertiesPanel({
       );
     }
 
-    // Default to text input
     return (
       <div key={key} className="config-field">
         <label className="field-label">{key}</label>
@@ -116,6 +123,9 @@ export default function PropertiesPanel({
     );
   };
 
+  // Live simulation metrics
+  const hasLiveMetrics = isSimulating && nodeData.metrics && nodeData.status;
+
   return (
     <div className="properties-panel">
       <div className="panel-header">
@@ -124,6 +134,12 @@ export default function PropertiesPanel({
             <IconComponent size={16} />
           </div>
           <h2 className="panel-title">Properties</h2>
+          {/* Status badge during simulation */}
+          {nodeData.status && (
+            <span className={`badge badge-status badge-${nodeData.status}`}>
+              {nodeData.status.toUpperCase()}
+            </span>
+          )}
         </div>
         <button className="btn btn-ghost btn-icon" onClick={onClose}>
           <Icons.X size={16} />
@@ -131,6 +147,61 @@ export default function PropertiesPanel({
       </div>
 
       <div className="panel-body">
+        {/* Live Metrics Section (Phase 2) */}
+        {hasLiveMetrics && nodeData.metrics && (
+          <div className="settings-section">
+            <h3 className="section-title">
+              <Icons.Activity size={12} />
+              Live Metrics
+            </h3>
+            <div className="live-metrics-grid">
+              <div className="live-metric-card">
+                <div className="live-metric-icon"><Icons.TrendingUp size={14} /></div>
+                <div className="live-metric-data">
+                  <span className="live-metric-value">{formatMetric(nodeData.metrics.throughput || 0)}/s</span>
+                  <span className="live-metric-label">Throughput</span>
+                </div>
+              </div>
+              <div className="live-metric-card">
+                <div className="live-metric-icon"><Icons.Clock size={14} /></div>
+                <div className="live-metric-data">
+                  <span className="live-metric-value">{nodeData.metrics.latency || 0}ms</span>
+                  <span className="live-metric-label">Latency</span>
+                </div>
+              </div>
+              <div className="live-metric-card">
+                <div className={`live-metric-icon ${(nodeData.metrics.errorRate || 0) > 5 ? 'metric-danger' : ''}`}>
+                  <Icons.AlertTriangle size={14} />
+                </div>
+                <div className="live-metric-data">
+                  <span className={`live-metric-value ${(nodeData.metrics.errorRate || 0) > 5 ? 'metric-danger' : ''}`}>
+                    {(nodeData.metrics.errorRate || 0).toFixed(1)}%
+                  </span>
+                  <span className="live-metric-label">Error Rate</span>
+                </div>
+              </div>
+              <div className="live-metric-card">
+                <div className="live-metric-icon"><Icons.Gauge size={14} /></div>
+                <div className="live-metric-data">
+                  <span className="live-metric-value">{(nodeData.metrics.saturation || 0).toFixed(1)}%</span>
+                  <span className="live-metric-label">Saturation</span>
+                </div>
+                {/* Saturation bar */}
+                <div className="panel-saturation-bar-container">
+                  <div
+                    className={`panel-saturation-bar ${
+                      (nodeData.metrics.saturation || 0) < 50 ? 'sat-healthy' :
+                      (nodeData.metrics.saturation || 0) < 75 ? 'sat-warning' :
+                      'sat-critical'
+                    }`}
+                    style={{ width: `${Math.min(nodeData.metrics.saturation || 0, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Basic Settings */}
         <div className="settings-section">
           <h3 className="section-title">General</h3>
@@ -168,14 +239,16 @@ export default function PropertiesPanel({
           </div>
         )}
 
-        {/* Metrics (Phase 2 Preview) */}
-        <div className="settings-section">
-          <h3 className="section-title">Metrics (Simulation)</h3>
-          <div className="metrics-placeholder">
-            <Icons.Activity size={16} />
-            <p>Metrics will appear here when simulation is running.</p>
+        {/* Metrics placeholder when not simulating */}
+        {!hasLiveMetrics && (
+          <div className="settings-section">
+            <h3 className="section-title">Metrics (Simulation)</h3>
+            <div className="metrics-placeholder">
+              <Icons.Activity size={16} />
+              <p>Metrics will appear here when simulation is running.</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

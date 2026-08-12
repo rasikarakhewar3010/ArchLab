@@ -1,8 +1,11 @@
 /**
- * Header — Top navigation bar
+ * Header — Top navigation bar (Phase 2 Enhanced)
+ * =================================================
+ * Added simulation state indicator in the header.
  */
 
-import { Cpu, Save, Sparkles, Menu } from 'lucide-react';
+import { Cpu, Save, Sparkles, Menu, Play, Pause } from 'lucide-react';
+import type { SimulationState } from '../../simulation/types';
 import './Header.css';
 
 interface HeaderProps {
@@ -10,6 +13,10 @@ interface HeaderProps {
   onSave?: () => void;
   onAnalyze?: () => void;
   onToggleSidebar?: () => void;
+  /** Simulation state for the header indicator */
+  simState?: SimulationState;
+  /** Toggle simulation on/off from header */
+  onSimToggle?: () => void;
 }
 
 export default function Header({
@@ -17,7 +24,11 @@ export default function Header({
   onSave,
   onAnalyze,
   onToggleSidebar,
+  simState = 'idle',
+  onSimToggle,
 }: HeaderProps) {
+  const isSimulating = simState !== 'idle';
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -45,6 +56,17 @@ export default function Header({
       </div>
 
       <div className="header-right">
+        {/* Simulation quick-toggle */}
+        <button
+          className={`btn btn-sm ${isSimulating ? 'btn-sim-active' : 'btn-secondary'}`}
+          onClick={onSimToggle}
+          title={isSimulating ? 'Stop Simulation' : 'Start Simulation'}
+        >
+          {isSimulating ? <Pause size={14} /> : <Play size={14} />}
+          {isSimulating ? 'Simulating' : 'Simulate'}
+          {isSimulating && <span className="header-sim-dot" />}
+        </button>
+
         <button className="btn btn-secondary btn-sm" onClick={onSave}>
           <Save size={14} />
           Save

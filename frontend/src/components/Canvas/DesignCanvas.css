@@ -71,6 +71,13 @@
   color: var(--color-border-hover);
 }
 
+.stats-simulating {
+  color: var(--color-success);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.05em;
+  animation: pulse 2s infinite;
+}
+
 /* --- Edge (connection) styling --- */
 .react-flow__edge-path {
   stroke: var(--color-primary) !important;

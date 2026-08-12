@@ -1,32 +1,21 @@
 /**
- * DesignCanvas — The Main Canvas Component
- * ==========================================
- * 
+ * DesignCanvas — The Main Canvas Component (Phase 2 Enhanced)
+ * ==============================================================
+ *
  * This is the HEART of ArchLab — the interactive canvas where
  * users build their system architectures.
- * 
- * REACT FLOW CONCEPTS:
- * - ReactFlow: The main canvas component
- * - useNodesState: Hook to manage nodes (add, remove, update)
- * - useEdgesState: Hook to manage edges (connections)
- * - onConnect: Callback when user draws a connection between nodes
- * - onDrop: Callback when user drops a component from the palette
- * - nodeTypes: Map of custom node type names → React components
- * 
- * DRAG & DROP FLOW:
- * 1. User drags a component from the ComponentPalette (sidebar)
- * 2. The palette sets drag data via dataTransfer.setData()
- * 3. User drops it on the canvas
- * 4. onDrop reads the data, creates a new node at the drop position
- * 5. React Flow renders our custom ArchNodeComponent
+ *
+ * Phase 2 additions:
+ *   - AnimatedEdge custom edge type with flowing particles
+ *   - Edge traffic data integration for simulation visualization
  */
 
 import { useCallback, useRef, useState, useMemo } from 'react';
 import {
   ReactFlow,
-  useEdgesState,
   addEdge,
   applyNodeChanges,
+  applyEdgeChanges,
   Controls,
   MiniMap,
   Background,
@@ -34,6 +23,7 @@ import {
   type Connection,
   type ReactFlowInstance,
   type NodeChange,
+  type EdgeChange,
   type Node,
   type Edge,
   Panel,
@@ -41,13 +31,19 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import ArchNodeComponent from './ArchNode';
+import AnimatedEdge from './AnimatedEdge';
 import { COMPONENT_LIBRARY } from '../../data/componentLibrary';
 import type { ArchNodeData } from '../../types';
+import type { EdgeTraffic } from '../../simulation/types';
 import './DesignCanvas.css';
 
-// Register our custom node type with React Flow
+// Register our custom node and edge types with React Flow
 const nodeTypes = {
   archNode: ArchNodeComponent,
+};
+
+const edgeTypes = {
+  animated: AnimatedEdge,
 };
 
 // Counter for generating unique node IDs
@@ -57,18 +53,42 @@ interface DesignCanvasProps {
   onNodeSelect?: (nodeId: string | null) => void;
   externalNodes?: Node[];
   setExternalNodes?: React.Dispatch<React.SetStateAction<Node[]>>;
+  /** External edges state lifted to App for simulation engine access */
+  externalEdges?: Edge[];
+  setExternalEdges?: React.Dispatch<React.SetStateAction<Edge[]>>;
+  /** Edge traffic data from simulation for animated edges */
+  edgeTraffic?: EdgeTraffic[];
+  /** Whether simulation is currently active */
+  isSimulating?: boolean;
 }
 
-export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalNodes }: DesignCanvasProps) {
+export default function DesignCanvas({
+  onNodeSelect,
+  externalNodes,
+  setExternalNodes,
+  externalEdges,
+  setExternalEdges,
+  edgeTraffic = [],
+  isSimulating = false,
+}: DesignCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
   // Fallback local state if external state is not provided
   const [localNodes, setLocalNodes] = useState<Node[]>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [localEdges, setLocalEdges] = useState<Edge[]>([]);
 
   const nodes = externalNodes || localNodes;
   const setNodes = setExternalNodes || setLocalNodes;
+  const edges = externalEdges || localEdges;
+  const setEdges = setExternalEdges || setLocalEdges;
+
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds));
+    },
+    [setEdges]
+  );
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -77,11 +97,9 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
     [setNodes]
   );
 
-
-
   /**
    * onConnect — Called when the user draws an edge between two nodes.
-   * addEdge() is a React Flow utility that adds the new edge to the list.
+   * Uses our custom animated edge type during simulation.
    */
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -89,12 +107,12 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
         addEdge(
           {
             ...connection,
-            animated: true,  // Animated dashed line = data flowing
-            style: { 
-              stroke: 'var(--color-primary)', 
+            animated: true,
+            style: {
+              stroke: 'var(--color-primary)',
               strokeWidth: 2,
             },
-            type: 'smoothstep',  // Smooth curved edges (looks professional)
+            type: 'animated',  // Use our custom AnimatedEdge
           },
           eds
         )
@@ -104,37 +122,47 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
   );
 
   /**
-   * onDragOver — Needed to allow dropping on the canvas.
-   * Without this, the browser won't let you drop anything.
+   * Enrich edges with traffic data during simulation.
+   * This passes trafficRps and status to each AnimatedEdge component.
    */
+  const enrichedEdges = useMemo(() => {
+    if (!isSimulating || edgeTraffic.length === 0) return edges;
+
+    return edges.map((edge) => {
+      const traffic = edgeTraffic.find(
+        (t) => t.source === edge.source && t.target === edge.target
+      );
+      // Determine status from the source node
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      const sourceData = sourceNode?.data as ArchNodeData | undefined;
+
+      return {
+        ...edge,
+        type: 'animated',
+        data: {
+          ...((edge.data as Record<string, unknown>) || {}),
+          trafficRps: traffic?.rps || 0,
+          status: sourceData?.status || null,
+        },
+      };
+    });
+  }, [edges, edgeTraffic, isSimulating, nodes]);
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  /**
-   * onDrop — The magic of drag-and-drop!
-   * 
-   * 1. Read the component type from drag data
-   * 2. Find the component definition from our library
-   * 3. Convert screen coordinates to canvas coordinates
-   * 4. Create a new node at that position
-   * 5. Add it to the canvas
-   */
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      // Read the component type that was dragged
       const componentType = event.dataTransfer.getData('application/archlab-component');
       if (!componentType) return;
 
-      // Find the component definition
       const componentDef = COMPONENT_LIBRARY.find((c) => c.type === componentType);
       if (!componentDef) return;
 
-      // Convert screen position to canvas position
-      // (accounts for zoom and pan)
       if (!reactFlowInstance || !reactFlowWrapper.current) return;
 
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
@@ -143,10 +171,9 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
         y: event.clientY - bounds.top,
       });
 
-      // Create the new node
       const newNode: Node = {
         id: `node_${++nodeIdCounter}_${Date.now()}`,
-        type: 'archNode',  // Use our custom node component
+        type: 'archNode',
         position,
         data: {
           label: componentDef.name,
@@ -159,15 +186,11 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
         } as ArchNodeData,
       };
 
-      // Add to canvas
       setNodes((nds) => [...nds, newNode]);
     },
     [reactFlowInstance, setNodes]
   );
 
-  /**
-   * Handle node selection — notify parent so the config panel can update
-   */
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: { id: string }) => {
       onNodeSelect?.(node.id);
@@ -179,13 +202,19 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
     onNodeSelect?.(null);
   }, [onNodeSelect]);
 
-  /**
-   * MiniMap node color — color-code by category
-   */
   const minimapNodeColor = useCallback((node: { data?: Record<string, unknown> }) => {
     const data = node.data as ArchNodeData | undefined;
+    // During simulation, color by status
+    if (isSimulating && data?.status) {
+      const statusColorMap: Record<string, string> = {
+        healthy: '#10b981',
+        warning: '#f59e0b',
+        critical: '#ef4444',
+        down: '#991b1b',
+      };
+      return statusColorMap[data.status] || '#6366f1';
+    }
     if (!data?.color) return '#6366f1';
-    // Extract color from CSS variable (simplified)
     const colorMap: Record<string, string> = {
       'var(--color-node-compute)': '#6366f1',
       'var(--color-node-storage)': '#10b981',
@@ -196,20 +225,19 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
       'var(--color-node-operations)': '#64748b',
     };
     return colorMap[data.color] || '#6366f1';
-  }, []);
+  }, [isSimulating]);
 
-  // Memoize default edge options for performance
   const defaultEdgeOptions = useMemo(() => ({
     animated: true,
     style: { stroke: 'var(--color-primary)', strokeWidth: 2 },
-    type: 'smoothstep' as const,
+    type: 'animated' as const,
   }), []);
 
   return (
     <div className="design-canvas" ref={reactFlowWrapper}>
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={enrichedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -219,6 +247,7 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         fitView
         snapToGrid
@@ -227,7 +256,6 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
         multiSelectionKeyCode="Shift"
         proOptions={{ hideAttribution: true }}
       >
-        {/* Dot grid background (like Figma/Excalidraw) */}
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
@@ -235,13 +263,11 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
           color="var(--color-border)"
         />
 
-        {/* Controls: zoom in/out, fit view, lock */}
-        <Controls 
+        <Controls
           className="canvas-controls"
           showInteractive={false}
         />
 
-        {/* MiniMap: bird's eye view in the corner */}
         <MiniMap
           className="canvas-minimap"
           nodeColor={minimapNodeColor}
@@ -253,11 +279,16 @@ export default function DesignCanvas({ onNodeSelect, externalNodes, setExternalN
           }}
         />
 
-        {/* Node/Edge count panel */}
         <Panel position="bottom-center" className="canvas-stats-panel">
           <span>{nodes.length} components</span>
           <span className="stats-divider">·</span>
           <span>{edges.length} connections</span>
+          {isSimulating && (
+            <>
+              <span className="stats-divider">·</span>
+              <span className="stats-simulating">⚡ SIMULATING</span>
+            </>
+          )}
         </Panel>
       </ReactFlow>
     </div>

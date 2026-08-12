@@ -1,21 +1,13 @@
 /**
- * ArchNode — Custom React Flow Node Component
- * ==============================================
- * 
+ * ArchNode — Custom React Flow Node Component (Phase 2 Enhanced)
+ * ================================================================
+ *
  * This is what each "component" looks like on the canvas.
- * React Flow lets you define custom node types that replace
- * the default boring rectangles with our styled, interactive cards.
- * 
- * REACT FLOW CONCEPTS:
- * - Node: A box on the canvas (our architecture component)
- * - Handle: Connection point on a node (where edges attach)
- * - Edge: A line connecting two nodes (data flow)
- * 
- * HOW CUSTOM NODES WORK:
- * 1. You create a React component (this file)
- * 2. Register it with React Flow: nodeTypes={{ archNode: ArchNodeComponent }}
- * 3. When creating a node, set type: 'archNode'
- * 4. React Flow renders YOUR component instead of the default
+ * Phase 2 additions:
+ *   - Pulsing status indicator dot (green/yellow/red) top-right
+ *   - Live metrics display (latency, throughput, error rate)
+ *   - Saturation progress bar at bottom (green → yellow → red gradient)
+ *   - Glow effects for overloaded nodes
  */
 
 import { memo } from 'react';
@@ -25,40 +17,33 @@ import type { LucideProps } from 'lucide-react';
 import type { ArchNodeData } from '../../types';
 import './ArchNode.css';
 
-/**
- * memo() is a React performance optimization.
- * It prevents re-rendering when props haven't changed.
- * Important for canvas performance with many nodes.
- */
+/** Format large numbers for compact display */
+function formatMetric(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(Math.round(n));
+}
+
 const ArchNodeComponent = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as unknown as ArchNodeData;
-  // Dynamically get the icon component from Lucide
   const IconComponent = ((Icons as any)[nodeData.icon] || Icons.Box) as React.ComponentType<LucideProps>;
 
   const statusClass = nodeData.status ? `node-status-${nodeData.status}` : '';
+  const hasMetrics = nodeData.metrics && nodeData.status;
 
   return (
     <div
-      className={`arch-node ${statusClass} ${selected ? 'arch-node-selected' : ''}`}
+      className={`arch-node ${statusClass} ${selected ? 'arch-node-selected' : ''} ${hasMetrics ? 'arch-node-simulating' : ''}`}
       style={{ '--node-color': nodeData.color } as React.CSSProperties}
     >
-      {/* 
-        Handles = connection points.
-        Position.Top = edge connects from the top.
-        Position.Bottom = edge connects from the bottom.
-        We add Left and Right too for flexible connections.
-      */}
-      <Handle 
-        type="target" 
-        position={Position.Top} 
-        className="arch-handle arch-handle-target" 
-      />
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        className="arch-handle arch-handle-target" 
-        id="left"
-      />
+      {/* Connection handles */}
+      <Handle type="target" position={Position.Top} className="arch-handle arch-handle-target" />
+      <Handle type="target" position={Position.Left} className="arch-handle arch-handle-target" id="left" />
+
+      {/* Status indicator dot (Phase 2) */}
+      {nodeData.status && (
+        <div className={`node-status-indicator status-${nodeData.status}`} />
+      )}
 
       <div className="arch-node-header">
         <div className="arch-node-icon" style={{ background: nodeData.color }}>
@@ -69,35 +54,46 @@ const ArchNodeComponent = memo(({ data, selected }: NodeProps) => {
 
       <div className="arch-node-type">{nodeData.description}</div>
 
-      {/* Show metrics during simulation (Phase 2) */}
-      {nodeData.metrics && (
+      {/* Live metrics during simulation (Phase 2) */}
+      {hasMetrics && nodeData.metrics && (
         <div className="arch-node-metrics">
+          {nodeData.metrics.throughput !== undefined && (
+            <span className="metric">
+              <Icons.Activity size={10} />
+              {formatMetric(nodeData.metrics.throughput)}/s
+            </span>
+          )}
           {nodeData.metrics.latency !== undefined && (
             <span className="metric">
               <Icons.Clock size={10} />
               {nodeData.metrics.latency}ms
             </span>
           )}
-          {nodeData.metrics.throughput !== undefined && (
-            <span className="metric">
-              <Icons.TrendingUp size={10} />
-              {nodeData.metrics.throughput}/s
+          {nodeData.metrics.errorRate !== undefined && nodeData.metrics.errorRate > 0 && (
+            <span className="metric metric-error">
+              <Icons.AlertTriangle size={10} />
+              {nodeData.metrics.errorRate.toFixed(1)}%
             </span>
           )}
         </div>
       )}
 
-      <Handle 
-        type="source" 
-        position={Position.Bottom} 
-        className="arch-handle arch-handle-source"
-      />
-      <Handle 
-        type="source" 
-        position={Position.Right} 
-        className="arch-handle arch-handle-source"
-        id="right"
-      />
+      {/* Saturation bar (Phase 2) */}
+      {hasMetrics && nodeData.metrics?.saturation !== undefined && (
+        <div className="node-saturation-bar-container">
+          <div
+            className={`node-saturation-bar ${
+              nodeData.metrics.saturation < 50 ? 'saturation-healthy' :
+              nodeData.metrics.saturation < 75 ? 'saturation-warning' :
+              'saturation-critical'
+            }`}
+            style={{ width: `${Math.min(nodeData.metrics.saturation, 100)}%` }}
+          />
+        </div>
+      )}
+
+      <Handle type="source" position={Position.Bottom} className="arch-handle arch-handle-source" />
+      <Handle type="source" position={Position.Right} className="arch-handle arch-handle-source" id="right" />
     </div>
   );
 });

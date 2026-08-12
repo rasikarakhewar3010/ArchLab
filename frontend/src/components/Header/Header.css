@@ -73,3 +73,26 @@
   border-color: var(--color-primary);
   outline: none;
 }
+
+/* --- Simulation Button --- */
+.btn-sim-active {
+  background: var(--color-success-muted);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+  position: relative;
+}
+
+.btn-sim-active:hover {
+  background: var(--color-danger-muted);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.header-sim-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+  animation: pulse 2s infinite;
+}
