@@ -37,9 +37,7 @@ export default function Header({
         </button>
         
         <div className="header-logo">
-          <div className="logo-icon">
-            <Cpu size={20} />
-          </div>
+          <img src="/logo.png" alt="ArchLab Logo" style={{ height: '28px', width: 'auto' }} />
           <span className="logo-text">ArchLab</span>
         </div>
 
