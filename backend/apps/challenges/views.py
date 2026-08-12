@@ -9,6 +9,7 @@ from .serializers import (
     ChallengeDetailSerializer,
     ChallengeAttemptSerializer,
 )
+from apps.ai_advisor.analyzer import analyze_design
 
 
 class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -44,11 +45,17 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     def submit(self, request, slug=None):
         """
         POST /api/challenges/{slug}/submit/
-        Submit a challenge attempt for scoring.
+        Submit a challenge attempt for AI scoring.
+
+        Request body:
+        {
+            "attempt_id": "uuid",
+            "design": { "nodes": [...], "edges": [...] }
+        }
         """
         challenge = self.get_object()
         attempt_id = request.data.get('attempt_id')
-        design_id = request.data.get('design_id')
+        design_data = request.data.get('design', {})
 
         try:
             attempt = ChallengeAttempt.objects.get(
@@ -62,15 +69,22 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        attempt.design_id = design_id
-        attempt.status = 'submitted'
+        # Run the AI Analyzer on the submitted design
+        nodes = design_data.get('nodes', [])
+        edges = design_data.get('edges', [])
+        feedback = analyze_design(nodes, edges)
+
+        # Update the attempt with results
+        attempt.status = 'scored'
         attempt.submitted_at = timezone.now()
         attempt.time_taken_seconds = (
             attempt.submitted_at - attempt.started_at
         ).total_seconds()
-        attempt.save()
-
-        # TODO: Trigger AI scoring (will be async with Celery later)
+        attempt.score = feedback.get('score', 0)
+        attempt.feedback = feedback
+        attempt.save(update_fields=[
+            'status', 'submitted_at', 'time_taken_seconds', 'score', 'feedback'
+        ])
 
         serializer = ChallengeAttemptSerializer(attempt)
         return Response(serializer.data)

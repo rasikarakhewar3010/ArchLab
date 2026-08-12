@@ -1,10 +1,11 @@
 /**
- * Header — Top navigation bar (Phase 2 Enhanced)
+ * Header — Top navigation bar (Phase 3 Enhanced)
  * =================================================
- * Added simulation state indicator in the header.
+ * Added navigation link to Challenges dashboard.
  */
 
-import { Cpu, Save, Sparkles, Menu, Play, Pause } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Save, Sparkles, Menu, Play, Pause, Trophy } from 'lucide-react';
 import type { SimulationState } from '../../simulation/types';
 import './Header.css';
 
@@ -27,6 +28,7 @@ export default function Header({
   simState = 'idle',
   onSimToggle,
 }: HeaderProps) {
+  const navigate = useNavigate();
   const isSimulating = simState !== 'idle';
 
   return (
@@ -36,7 +38,7 @@ export default function Header({
           <Menu size={18} />
         </button>
         
-        <div className="header-logo">
+        <div className="header-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <img src="/logo.png" alt="ArchLab Logo" style={{ height: '28px', width: 'auto' }} />
           <span className="logo-text">ArchLab</span>
         </div>
@@ -54,6 +56,16 @@ export default function Header({
       </div>
 
       <div className="header-right">
+        {/* Challenges Link */}
+        <button
+          className="btn btn-ghost btn-sm header-challenges-btn"
+          onClick={() => navigate('/challenges')}
+          title="System Design Challenges"
+        >
+          <Trophy size={14} />
+          Challenges
+        </button>
+
         {/* Simulation quick-toggle */}
         <button
           className={`btn btn-sm ${isSimulating ? 'btn-sim-active' : 'btn-secondary'}`}

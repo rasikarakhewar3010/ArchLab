@@ -96,3 +96,13 @@
   box-shadow: 0 0 6px var(--color-success);
   animation: pulse 2s infinite;
 }
+
+/* --- Challenges Link --- */
+.header-challenges-btn {
+  color: var(--color-warning) !important;
+  gap: var(--space-1);
+}
+
+.header-challenges-btn:hover {
+  background: var(--color-warning-muted) !important;
+}
