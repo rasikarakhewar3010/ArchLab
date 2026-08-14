@@ -29,9 +29,20 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     def start(self, request, slug=None):
         """
         POST /api/challenges/{slug}/start/
-        Start a challenge attempt.
+        Start a challenge attempt. Returns existing in-progress attempt if one exists.
         """
         challenge = self.get_object()
+
+        # Check for existing in-progress attempt — prevent duplicates
+        existing_attempt = ChallengeAttempt.objects.filter(
+            user=request.user,
+            challenge=challenge,
+            status='in_progress',
+        ).first()
+
+        if existing_attempt:
+            serializer = ChallengeAttemptSerializer(existing_attempt)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         attempt = ChallengeAttempt.objects.create(
             user=request.user,

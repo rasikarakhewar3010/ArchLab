@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 
     # --- Third-party apps ---
     'rest_framework',                # Django REST Framework — builds our API
+    'rest_framework.authtoken',      # Token-based authentication for SPA
     'corsheaders',                   # Handles CORS (so React can talk to Django)
     'allauth',                       # Authentication (social login, email)
     'allauth.account',               # Account management
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     'apps.designs',                  # Architecture designs (the core feature!)
     'apps.challenges',               # System design challenges
     'apps.ai_advisor',               # AI feedback service
+    'apps.learning',                 # Learning Hub — curated system design resources
 ]
 
 
@@ -132,20 +134,30 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # =============================================================================
 # DATABASE
 # =============================================================================
-# We use PostgreSQL — a powerful, production-grade relational database.
-# 
-# WHY PostgreSQL over SQLite?
-# - SQLite is a single file, great for prototyping but can't handle concurrent writes
-# - PostgreSQL supports: JSON fields, full-text search, concurrent connections
-# - PostgreSQL's `jsonb` type lets us store design schemas flexibly
-#   (this is why we DON'T need MongoDB yet!)
+# Supports both PostgreSQL (production) and SQLite (development).
+# Set DB_ENGINE=postgresql in .env to use PostgreSQL.
+# Default: SQLite for easy local development.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite3')
+
+if DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'archlab'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # =============================================================================
@@ -163,11 +175,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # We use a custom User model (always do this in Django — it's a pain to change later)
 AUTH_USER_MODEL = 'users.User'
 
-# django-allauth settings
+# django-allauth settings (v65+ new format)
 SITE_ID = 1  # Required by allauth
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_LOGIN_METHODS = {'email': 'required'}  # Login via email (replaces deprecated ACCOUNT_AUTHENTICATION_METHOD)
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']  # Replaces deprecated EMAIL_REQUIRED + USERNAME_REQUIRED
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for now
 
 AUTHENTICATION_BACKENDS = [
@@ -216,8 +227,8 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 REST_FRAMEWORK = {
     # How users prove who they are (authentication)
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # Token auth for SPA (no CSRF needed)
+        'rest_framework.authentication.SessionAuthentication',  # Session auth for DRF browsable API
     ],
     # Who can access what (permissions)
     'DEFAULT_PERMISSION_CLASSES': [
@@ -240,6 +251,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Allow cookies (needed for session auth)
+
+# CSRF trusted origins — needed for SPA frontends making POST requests
+CSRF_TRUSTED_ORIGINS = [
+    os.getenv('FRONTEND_URL', 'http://localhost:5173'),
+]
 
 
 # =============================================================================

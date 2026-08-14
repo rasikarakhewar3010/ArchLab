@@ -72,6 +72,21 @@ class User(AbstractUser):
         help_text="Total score from completed challenges"
     )
 
+    completed_challenges = models.IntegerField(
+        default=0,
+        help_text="Count of successfully completed challenges"
+    )
+
+    rank = models.IntegerField(
+        default=0,
+        help_text="Leaderboard position (calculated periodically)"
+    )
+
+    badges = models.JSONField(
+        default=list,
+        help_text="List of earned badge IDs or names"
+    )
+
     streak_days = models.IntegerField(
         default=0,
         help_text="Current daily streak"

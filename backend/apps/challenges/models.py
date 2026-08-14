@@ -15,6 +15,25 @@ from django.conf import settings
 import uuid
 
 
+class Badge(models.Model):
+    """Gamification badge that users can earn."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    description = models.TextField()
+    icon = models.CharField(max_length=50, help_text="Lucide icon name")
+    category = models.CharField(max_length=50, choices=[
+        ('challenge', 'Challenge Completion'),
+        ('streak', 'Daily Streak'),
+        ('social', 'Community Interaction'),
+    ])
+    points = models.IntegerField(default=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Challenge(models.Model):
     """A system design challenge/problem."""
 
@@ -67,7 +86,17 @@ class Challenge(models.Model):
         help_text="e.g., ['Google', 'Amazon', 'Meta']"
     )
 
+    # Solution patterns that work for this challenge
+    solution_patterns = models.JSONField(
+        default=list,
+        help_text="e.g., ['CQRS', 'Cache-Aside', 'Event-Driven']"
+    )
+
     # Challenge metadata
+    estimated_difficulty_rating = models.FloatField(
+        null=True, blank=True,
+        help_text="Community rating out of 5.0"
+    )
     time_limit_minutes = models.IntegerField(
         default=45,
         help_text="Suggested time limit (like a real interview)"

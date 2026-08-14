@@ -13,14 +13,53 @@ import type { Challenge, ChallengeAttempt, AIFeedback } from '../types';
 
 const API_BASE = '/api';
 
-/** Generic JSON fetcher with error handling */
+// ===== Auth Token Management =====
+
+let authToken: string | null = localStorage.getItem('archlab_token');
+
+/** Set the auth token (called after login/register) */
+export function setAuthToken(token: string | null) {
+  authToken = token;
+  if (token) {
+    localStorage.setItem('archlab_token', token);
+  } else {
+    localStorage.removeItem('archlab_token');
+  }
+}
+
+/** Get CSRF token from cookies (needed for session-based auth fallback) */
+function getCSRFToken(): string | null {
+  const match = document.cookie.match(/csrftoken=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+// ===== Generic Fetcher =====
+
+/** Generic JSON fetcher with error handling, auth, and CSRF support */
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string>),
+  };
+
+  // Add auth token if available
+  if (authToken) {
+    headers['Authorization'] = `Token ${authToken}`;
+  }
+
+  // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
+  const method = options?.method?.toUpperCase() || 'GET';
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const csrfToken = getCSRFToken();
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+  }
+
   const res = await fetch(`${API_BASE}${url}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    credentials: 'include',  // Include cookies for session auth
     ...options,
+    headers,
   });
 
   if (!res.ok) {
@@ -31,11 +70,32 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// ===== Pagination Helper =====
+
+/** DRF paginated response shape */
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+/** Fetch all items from a paginated endpoint (extracts from `results` array) */
+async function apiFetchList<T>(url: string, options?: RequestInit): Promise<T[]> {
+  const response = await apiFetch<PaginatedResponse<T> | T[]>(url, options);
+
+  // Handle both paginated and non-paginated responses
+  if (Array.isArray(response)) {
+    return response;
+  }
+  return response.results;
+}
+
 // ===== Challenges API =====
 
 /** Fetch all challenges (list view) */
 export async function getChallenges(): Promise<Challenge[]> {
-  return apiFetch<Challenge[]>('/challenges/');
+  return apiFetchList<Challenge>('/challenges/');
 }
 
 /** Fetch a single challenge by slug (detail view) */
@@ -84,4 +144,24 @@ export async function analyzeDesign(
     method: 'POST',
     body: JSON.stringify({ nodes, edges }),
   });
+}
+
+// ===== User Auth API =====
+
+/** Register a new user */
+export async function registerUser(data: {
+  username: string;
+  email: string;
+  password: string;
+  password_confirm: string;
+}) {
+  return apiFetch('/users/register/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/** Get current user's profile */
+export async function getCurrentUser() {
+  return apiFetch('/users/me/');
 }

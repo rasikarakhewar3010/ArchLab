@@ -4,6 +4,7 @@ Design Views
 API endpoints for managing architecture designs.
 """
 
+from django.db.models import Q, F
 from rest_framework import viewsets, status, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -52,7 +53,7 @@ class DesignViewSet(viewsets.ModelViewSet):
         GET    /api/designs/my_designs/      → Get current user's designs
     """
 
-    permission_classes = [IsAuthorOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description', 'tags']
     ordering_fields = ['created_at', 'updated_at', 'stars_count', 'ai_score']
@@ -68,7 +69,7 @@ class DesignViewSet(viewsets.ModelViewSet):
         if user.is_authenticated:
             # Show user's own designs + all public designs
             return Design.objects.filter(
-                models.Q(author=user) | models.Q(is_public=True)
+                Q(author=user) | Q(is_public=True)
             ).select_related('author')  # select_related = SQL JOIN (prevents N+1 queries)
         else:
             return Design.objects.filter(is_public=True).select_related('author')
@@ -127,15 +128,15 @@ class DesignViewSet(viewsets.ModelViewSet):
         )
 
         if not created:
-            # Already starred → unstar
+            # Already starred — unstar
             star.delete()
-            design.stars_count = max(0, design.stars_count - 1)
-            design.save(update_fields=['stars_count'])
+            Design.objects.filter(pk=design.pk).update(stars_count=F('stars_count') - 1)
+            design.refresh_from_db()
             return Response({'starred': False, 'stars_count': design.stars_count})
 
         # New star
-        design.stars_count += 1
-        design.save(update_fields=['stars_count'])
+        Design.objects.filter(pk=design.pk).update(stars_count=F('stars_count') + 1)
+        design.refresh_from_db()
         return Response({'starred': True, 'stars_count': design.stars_count})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
@@ -161,9 +162,8 @@ class DesignViewSet(viewsets.ModelViewSet):
             forked_from=original,
         )
 
-        # Update fork count on the original
-        original.forks_count += 1
-        original.save(update_fields=['forks_count'])
+        # Update fork count on the original (atomic to prevent race conditions)
+        Design.objects.filter(pk=original.pk).update(forks_count=F('forks_count') + 1)
 
         # Create v1 for the fork
         DesignVersion.objects.create(
@@ -201,6 +201,3 @@ class DesignViewSet(viewsets.ModelViewSet):
         serializer = DesignListSerializer(designs, many=True)
         return Response(serializer.data)
 
-
-# We need this import for Q objects in get_queryset
-from django.db import models

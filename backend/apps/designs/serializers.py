@@ -106,10 +106,9 @@ class DesignCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Automatically set the author to the current user.
-        The request.user is passed via the view's perform_create().
+        Create a new design with initial version.
+        The author is set by the view's perform_create() via serializer.save(author=request.user).
         """
-        validated_data['author'] = self.context['request'].user
         design = super().create(validated_data)
 
         # Create initial version (v1)

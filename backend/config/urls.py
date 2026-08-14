@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/designs/', include('apps.designs.urls')),
     path('api/challenges/', include('apps.challenges.urls')),
     path('api/ai/', include('apps.ai_advisor.urls')),
+    path('api/learning/', include('apps.learning.urls')),
 
     # django-allauth handles OAuth (GitHub login, etc.)
     path('accounts/', include('allauth.urls')),

@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from .analyzer import analyze_design
+from .ai_chat import get_chat_response, suggest_next_components
 
 
 @api_view(['POST'])
@@ -25,7 +26,8 @@ def analyze_architecture(request):
         "score": 72,
         "issues": [...],
         "positives": [...],
-        "categories": {...}
+        "categories": {...},
+        "patterns_detected": [...]
     }
     """
     nodes = request.data.get('nodes', [])
@@ -47,3 +49,77 @@ def analyze_architecture(request):
             pass  # Silently skip if design not found
 
     return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def chat_with_advisor(request):
+    """
+    POST /api/ai/chat/
+    
+    Ask the AI advisor a system design question.
+    Optionally send the current design context for contextual advice.
+    
+    Request body:
+    {
+        "message": "How should I handle database scaling?",
+        "design_context": {          // Optional
+            "nodes": [...],
+            "edges": [...]
+        }
+    }
+    
+    Response:
+    {
+        "response": "...",
+        "sources": ["System Design Primer"],
+        "related_topics": ["Caching", "Replication"],
+        "powered_by": "knowledge_base" | "ai"
+    }
+    """
+    message = request.data.get('message', '').strip()
+    if not message:
+        return Response(
+            {'error': 'Message is required'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    design_context = request.data.get('design_context')
+    result = get_chat_response(message, design_context)
+
+    return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def suggest_improvements(request):
+    """
+    POST /api/ai/suggest/
+    
+    Given a partial design, suggest what components to add next.
+    
+    Request body:
+    {
+        "nodes": [...],
+        "edges": [...]
+    }
+    
+    Response:
+    {
+        "suggestions": [
+            {
+                "component_type": "cache",
+                "name": "Cache (Redis)",
+                "reason": "Add caching to reduce database load."
+            }
+        ]
+    }
+    """
+    nodes = request.data.get('nodes', [])
+    edges = request.data.get('edges', [])
+
+    suggestions = suggest_next_components(nodes, edges)
+
+    return Response({
+        'suggestions': suggestions,
+    }, status=status.HTTP_200_OK)
