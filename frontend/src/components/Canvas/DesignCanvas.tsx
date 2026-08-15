@@ -35,6 +35,7 @@ import AnimatedEdge from './AnimatedEdge';
 import { COMPONENT_LIBRARY } from '../../data/componentLibrary';
 import type { ArchNodeData } from '../../types';
 import type { EdgeTraffic } from '../../simulation/types';
+import { useDesignWebSocket } from '../../hooks/useDesignWebSocket';
 import './DesignCanvas.css';
 
 // Register our custom node and edge types with React Flow
@@ -60,6 +61,10 @@ interface DesignCanvasProps {
   edgeTraffic?: EdgeTraffic[];
   /** Whether simulation is currently active */
   isSimulating?: boolean;
+  /** Design ID for WebSocket real-time collaboration */
+  designId?: string;
+  /** Unique client ID for WebSocket */
+  clientId?: string;
 }
 
 export default function DesignCanvas({
@@ -70,6 +75,8 @@ export default function DesignCanvas({
   setExternalEdges,
   edgeTraffic = [],
   isSimulating = false,
+  designId = '',
+  clientId = 'local-client',
 }: DesignCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -83,18 +90,27 @@ export default function DesignCanvas({
   const edges = externalEdges || localEdges;
   const setEdges = setExternalEdges || setLocalEdges;
 
+  const { broadcastChanges } = useDesignWebSocket(
+    designId,
+    clientId,
+    setNodes as React.Dispatch<React.SetStateAction<Node[]>>,
+    setEdges as React.Dispatch<React.SetStateAction<Edge[]>>
+  );
+
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       setEdges((eds) => applyEdgeChanges(changes, eds));
+      if (designId) broadcastChanges(undefined, changes);
     },
-    [setEdges]
+    [setEdges, broadcastChanges, designId]
   );
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       setNodes((nds) => applyNodeChanges(changes, nds));
+      if (designId) broadcastChanges(changes, undefined);
     },
-    [setNodes]
+    [setNodes, broadcastChanges, designId]
   );
 
   /**
@@ -117,8 +133,24 @@ export default function DesignCanvas({
           eds
         )
       );
+      if (designId) {
+        // Broadcast the new edge as an 'add' change
+        const edgeId = `reactflow__edge-${connection.source}${connection.sourceHandle || ''}-${connection.target}${connection.targetHandle || ''}`;
+        broadcastChanges(undefined, [{
+          type: 'add',
+          item: {
+            id: edgeId,
+            source: connection.source,
+            target: connection.target,
+            sourceHandle: connection.sourceHandle,
+            targetHandle: connection.targetHandle,
+            animated: true,
+            type: 'animated',
+          }
+        } as EdgeChange]);
+      }
     },
-    [setEdges]
+    [setEdges, broadcastChanges, designId]
   );
 
   /**
@@ -187,8 +219,11 @@ export default function DesignCanvas({
       };
 
       setNodes((nds) => [...nds, newNode]);
+      if (designId) {
+        broadcastChanges([{ type: 'add', item: newNode }], undefined);
+      }
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, setNodes, broadcastChanges, designId]
   );
 
   const onNodeClick = useCallback(

@@ -49,6 +49,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 # Django comes with some built-in apps, and we add our own + third-party ones.
 
 INSTALLED_APPS = [
+    'daphne',                        # ASGI server (must be before staticfiles)
     # --- Django built-in apps ---
     'django.contrib.admin',          # Admin panel (auto-generated CRUD UI)
     'django.contrib.auth',           # Authentication system (users, passwords)
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     'rest_framework',                # Django REST Framework — builds our API
     'rest_framework.authtoken',      # Token-based authentication for SPA
     'corsheaders',                   # Handles CORS (so React can talk to Django)
+    'channels',                      # WebSocket support
     'allauth',                       # Authentication (social login, email)
     'allauth.account',               # Account management
     'allauth.socialaccount',         # Social auth (GitHub, Google)
@@ -129,6 +131,28 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# =============================================================================
+# REDIS / CHANNEL LAYERS
+# =============================================================================
+if os.getenv('DB_ENGINE', 'sqlite3') == 'postgresql':
+    # Use Redis when in production/Docker mode
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [(os.getenv('REDIS_HOST', 'localhost'), 6379)],
+            },
+        },
+    }
+else:
+    # Use InMemory for local development without Docker
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
 
 
 # =============================================================================
