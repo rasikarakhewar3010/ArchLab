@@ -106,3 +106,114 @@
 .header-challenges-btn:hover {
   background: var(--color-warning-muted) !important;
 }
+
+/* --- User Auth --- */
+.header-signin-btn {
+  color: var(--color-primary-hover) !important;
+}
+
+.header-user-menu {
+  position: relative;
+}
+
+.header-avatar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
+}
+
+.header-avatar-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.header-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-primary-hover);
+  background: var(--color-primary-muted);
+}
+
+.header-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-dropdown);
+  animation: scaleIn var(--transition-fast) ease;
+  overflow: hidden;
+}
+
+.header-dropdown-user {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-dropdown-user strong {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.header-dropdown-user span {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.header-dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+.header-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.header-dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.header-dropdown-danger {
+  color: var(--color-danger);
+}
+
+.header-dropdown-danger:hover {
+  background: var(--color-danger-muted);
+  color: var(--color-danger);
+}
+

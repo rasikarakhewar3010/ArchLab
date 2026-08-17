@@ -9,7 +9,7 @@
  * works without the backend running.
  */
 
-import type { Challenge, ChallengeAttempt, AIFeedback } from '../types';
+import type { Challenge, ChallengeAttempt, AIFeedback, User, Design } from '../types';
 
 const API_BASE = '/api';
 
@@ -25,6 +25,11 @@ export function setAuthToken(token: string | null) {
   } else {
     localStorage.removeItem('archlab_token');
   }
+}
+
+/** Get the current auth token */
+export function getAuthToken(): string | null {
+  return authToken;
 }
 
 /** Get CSRF token from cookies (needed for session-based auth fallback) */
@@ -67,6 +72,9 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error(`API Error ${res.status}: ${errorBody}`);
   }
 
+  // Handle 204 No Content
+  if (res.status === 204) return undefined as T;
+
   return res.json();
 }
 
@@ -89,6 +97,112 @@ async function apiFetchList<T>(url: string, options?: RequestInit): Promise<T[]>
     return response;
   }
   return response.results;
+}
+
+// ===== User Auth API =====
+
+/** Login user — returns token + user */
+export async function loginUser(username: string, password: string): Promise<{ token: string; user: User }> {
+  return apiFetch('/users/login/', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+/** Register a new user — returns token + user */
+export async function registerUser(data: {
+  username: string;
+  email: string;
+  password: string;
+  password_confirm: string;
+}): Promise<{ token: string; user: User }> {
+  return apiFetch('/users/register/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/** Get current user's profile */
+export async function getCurrentUser(): Promise<User> {
+  return apiFetch('/users/me/');
+}
+
+/** Update current user's profile */
+export async function updateProfile(data: Partial<User>): Promise<User> {
+  return apiFetch('/users/me/', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+// ===== Designs API =====
+
+/** List design shape for the gallery */
+export interface DesignListItem {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  author_username: string;
+  author_avatar: string;
+  component_count: number;
+  connection_count: number;
+  ai_score: number | null;
+  is_public: boolean;
+  tags: string[];
+  stars_count: number;
+  forks_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Get current user's designs */
+export async function getMyDesigns(): Promise<DesignListItem[]> {
+  return apiFetchList<DesignListItem>('/designs/my_designs/');
+}
+
+/** Get a single design by ID (full detail with nodes/edges) */
+export async function getDesign(id: string): Promise<Design> {
+  return apiFetch<Design>(`/designs/${id}/`);
+}
+
+/** Create a new design */
+export async function createDesign(data: {
+  title: string;
+  description?: string;
+  nodes: unknown[];
+  edges: unknown[];
+  viewport?: { x: number; y: number; zoom: number };
+  is_public?: boolean;
+  tags?: string[];
+}): Promise<Design> {
+  return apiFetch<Design>('/designs/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/** Update an existing design (auto-save) */
+export async function updateDesign(id: string, data: {
+  title?: string;
+  description?: string;
+  nodes?: unknown[];
+  edges?: unknown[];
+  viewport?: { x: number; y: number; zoom: number };
+  is_public?: boolean;
+  tags?: string[];
+}): Promise<Design> {
+  return apiFetch<Design>(`/designs/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/** Delete a design */
+export async function deleteDesign(id: string): Promise<void> {
+  return apiFetch(`/designs/${id}/`, {
+    method: 'DELETE',
+  });
 }
 
 // ===== Challenges API =====
@@ -138,30 +252,76 @@ export async function getChallengeSolution(slug: string): Promise<{
 /** Analyze a design with the AI engine */
 export async function analyzeDesign(
   nodes: unknown[],
-  edges: unknown[]
+  edges: unknown[],
+  designId?: string
 ): Promise<AIFeedback> {
   return apiFetch<AIFeedback>('/ai/analyze/', {
     method: 'POST',
-    body: JSON.stringify({ nodes, edges }),
+    body: JSON.stringify({ nodes, edges, design_id: designId }),
   });
 }
 
-// ===== User Auth API =====
+// ===== Learning Hub API =====
 
-/** Register a new user */
-export async function registerUser(data: {
-  username: string;
-  email: string;
-  password: string;
-  password_confirm: string;
-}) {
-  return apiFetch('/users/register/', {
+export interface LearningResource {
+  id: string;
+  title: string;
+  slug: string;
+  url: string;
+  description: string;
+  source_type: 'github' | 'article' | 'video' | 'documentation' | 'course';
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  topics: string[];
+  author_name: string;
+  github_stars: number | null;
+  estimated_time_minutes: number | null;
+  icon: string;
+  is_featured: boolean;
+  user_status?: 'not_started' | 'in_progress' | 'completed';
+}
+
+export interface StudyPath {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  difficulty: string;
+  icon: string;
+  resource_count: number;
+  resources?: LearningResource[];
+}
+
+export interface LearningStats {
+  total_resources: number;
+  completed: number;
+  in_progress: number;
+  completion_percent: number;
+}
+
+/** Get all learning resources */
+export async function getResources(): Promise<LearningResource[]> {
+  return apiFetchList<LearningResource>('/learning/resources/');
+}
+
+/** Get featured resources */
+export async function getFeaturedResources(): Promise<LearningResource[]> {
+  return apiFetchList<LearningResource>('/learning/resources/featured/');
+}
+
+/** Get study paths */
+export async function getStudyPaths(): Promise<StudyPath[]> {
+  return apiFetchList<StudyPath>('/learning/paths/');
+}
+
+/** Mark a resource as complete */
+export async function markResourceComplete(resourceId: string) {
+  return apiFetch('/learning/progress/mark_complete/', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({ resource_id: resourceId }),
   });
 }
 
-/** Get current user's profile */
-export async function getCurrentUser() {
-  return apiFetch('/users/me/');
+/** Get learning stats */
+export async function getLearningStats(): Promise<LearningStats> {
+  return apiFetch<LearningStats>('/learning/progress/stats/');
 }

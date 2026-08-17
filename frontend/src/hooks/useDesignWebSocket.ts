@@ -34,7 +34,7 @@ export const useDesignWebSocket = (
       onOpen: () => console.log('WebSocket connection opened'),
       onClose: () => console.log('WebSocket connection closed'),
       shouldReconnect: () => true,
-      onMessage: (event) => {
+      onMessage: (event: any) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           

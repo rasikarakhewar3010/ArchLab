@@ -1,28 +1,8 @@
-"""
-User Views (API Endpoints)
-===========================
-WHAT ARE VIEWS?
-Views handle HTTP requests and return HTTP responses.
-In DRF, we use "ViewSets" which group related actions together.
-
-COMPARISON TO EXPRESS.JS:
-  Express:  router.get('/users/:id', (req, res) => { ... })
-  Django:   class UserViewSet(viewsets.ModelViewSet): ...
-
-ViewSet automatically creates these endpoints:
-  GET    /api/users/          → list()    → Get all users
-  POST   /api/users/          → create()  → Create a user
-  GET    /api/users/{id}/     → retrieve() → Get one user
-  PUT    /api/users/{id}/     → update()  → Update a user
-  DELETE /api/users/{id}/     → destroy() → Delete a user
-
-We also add custom actions like /api/users/me/ for the current user.
-"""
-
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.contrib.auth import login
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import login, authenticate
 
 from .models import User
 from .serializers import (
@@ -50,8 +30,8 @@ class UserViewSet(viewsets.ModelViewSet):
         Different permissions for different actions.
         This is like middleware in Express that checks auth per route.
         """
-        if self.action in ['create', 'register']:
-            # Anyone can register
+        if self.action in ['create', 'register', 'login']:
+            # Anyone can register or login
             return [permissions.AllowAny()]
         elif self.action in ['update', 'partial_update', 'destroy']:
             # Only the user themselves
@@ -73,32 +53,74 @@ class UserViewSet(viewsets.ModelViewSet):
     def register(self, request):
         """
         POST /api/users/register/
-        Create a new user account.
-        
-        @action decorator creates a custom endpoint beyond the standard CRUD.
-        detail=False means it's a list-level action (/users/register/)
-        not an instance-level action (/users/123/something/).
+        Create a new user account and return an auth token.
         """
         serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)  # Returns 400 if invalid
         user = serializer.save()
 
+        # Create auth token for the new user
+        token, _ = Token.objects.get_or_create(user=user)
+
         # Auto-login after registration
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        return Response(
-            UserSerializer(user).data,
-            status=status.HTTP_201_CREATED
-        )
+        return Response({
+            'token': token.key,
+            'user': UserSerializer(user).data,
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    def login(self, request):
+        """
+        POST /api/users/login/
+        Authenticate a user and return an auth token.
+
+        Request body:
+        {
+            "username": "john",
+            "password": "mypassword123"
+        }
+
+        Response:
+        {
+            "token": "abc123...",
+            "user": { ... }
+        }
+        """
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '')
+
+        if not username or not password:
+            return Response(
+                {'error': 'Both username and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is None:
+            return Response(
+                {'error': 'Invalid username or password.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # Create or retrieve auth token
+        token, _ = Token.objects.get_or_create(user=user)
+
+        # Set session (for browsable API)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        return Response({
+            'token': token.key,
+            'user': UserSerializer(user).data,
+        })
 
     @action(detail=False, methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
         """
         GET  /api/users/me/  → Get current user's profile
         PATCH /api/users/me/ → Update current user's profile
-        
-        This is a very common pattern — let users access their own data
-        without knowing their ID.
         """
         user = request.user
 

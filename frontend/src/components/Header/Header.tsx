@@ -1,11 +1,14 @@
 /**
- * Header — Top navigation bar (Phase 3 Enhanced)
- * =================================================
- * Added navigation link to Challenges dashboard.
+ * Header — Top Navigation Bar
+ * ==============================
+ * Shows branding, navigation links, simulation toggle, save, analyze,
+ * and user auth status (login button or user avatar dropdown).
  */
 
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, Sparkles, Menu, Play, Pause, Trophy } from 'lucide-react';
+import { Save, Sparkles, Menu, Play, Pause, Trophy, BookOpen, LogOut, Layers, LogIn } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import type { SimulationState } from '../../simulation/types';
 import './Header.css';
 
@@ -14,9 +17,7 @@ interface HeaderProps {
   onSave?: () => void;
   onAnalyze?: () => void;
   onToggleSidebar?: () => void;
-  /** Simulation state for the header indicator */
   simState?: SimulationState;
-  /** Toggle simulation on/off from header */
   onSimToggle?: () => void;
 }
 
@@ -29,7 +30,21 @@ export default function Header({
   onSimToggle,
 }: HeaderProps) {
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   const isSimulating = simState !== 'idle';
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   return (
     <header className="app-header">
@@ -56,6 +71,16 @@ export default function Header({
       </div>
 
       <div className="header-right">
+        {/* Learn Link */}
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => navigate('/learn')}
+          title="Learning Hub"
+        >
+          <BookOpen size={14} />
+          Learn
+        </button>
+
         {/* Challenges Link */}
         <button
           className="btn btn-ghost btn-sm header-challenges-btn"
@@ -86,6 +111,50 @@ export default function Header({
           <Sparkles size={14} />
           Analyze with AI
         </button>
+
+        {/* User Auth */}
+        {isAuthenticated && user ? (
+          <div className="header-user-menu" ref={menuRef}>
+            <button
+              className="header-avatar-btn"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              title={user.username}
+            >
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.username} className="header-avatar-img" />
+              ) : (
+                <div className="header-avatar-placeholder">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+
+            {showUserMenu && (
+              <div className="header-dropdown">
+                <div className="header-dropdown-user">
+                  <strong>{user.username}</strong>
+                  <span>{user.email}</span>
+                </div>
+                <div className="header-dropdown-divider" />
+                <button className="header-dropdown-item" onClick={() => { navigate('/my-designs'); setShowUserMenu(false); }}>
+                  <Layers size={14} /> My Designs
+                </button>
+                <button className="header-dropdown-item" onClick={() => { navigate('/learn'); setShowUserMenu(false); }}>
+                  <BookOpen size={14} /> Learning Hub
+                </button>
+                <div className="header-dropdown-divider" />
+                <button className="header-dropdown-item header-dropdown-danger" onClick={() => { logout(); setShowUserMenu(false); }}>
+                  <LogOut size={14} /> Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button className="btn btn-ghost btn-sm header-signin-btn" onClick={() => navigate('/auth')}>
+            <LogIn size={14} />
+            Sign In
+          </button>
+        )}
       </div>
     </header>
   );
