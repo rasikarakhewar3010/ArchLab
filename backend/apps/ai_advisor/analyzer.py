@@ -11,7 +11,9 @@ ENHANCEMENTS over MVP:
 - Contextual suggestions inspired by system design best practices
 """
 
+import os
 import json
+import urllib.request
 
 
 # Component type definitions — these map to what's on the canvas
@@ -623,12 +625,108 @@ def analyze_design(nodes, edges):
     if len(patterns_detected) >= 2:
         total_score = min(100, total_score + 3)
 
+    # =========================================================================
+    # Enhance with Nematron/Nvidia API LLM Insights
+    # =========================================================================
+    nemotron_insights = _get_nemotron_insights(nodes, edges)
+    if nemotron_insights:
+        if 'issues' in nemotron_insights:
+            issues.extend(nemotron_insights['issues'])
+        if 'positives' in nemotron_insights:
+            positives.extend(nemotron_insights['positives'])
+
     return {
         'score': total_score,
-        'issues': sorted(issues, key=lambda x: {'critical': 0, 'warning': 1, 'info': 2}.get(x['severity'], 3)),
+        'issues': sorted(issues, key=lambda x: {'critical': 0, 'warning': 1, 'info': 2}.get(x.get('severity', 'info'), 3)),
         'positives': positives,
         'categories': categories,
         'patterns_detected': [{'name': p['name'], 'description': p['description']} for p in patterns_detected],
         'component_count': len(nodes),
         'connection_count': len(edges),
     }
+
+
+def _get_nemotron_insights(nodes, edges):
+    """
+    Call the Nvidia Nemotron API to get advanced insights on the architecture.
+    """
+    api_key = os.getenv('NVIDIA_API_KEY')
+    if not api_key:
+        return None
+
+    if len(nodes) < 2:
+        return None  # Too simple for LLM to provide meaningful advice
+
+    # Create a concise summary of the architecture for the LLM
+    comp_details = []
+    node_lookup = {}
+    for n in nodes:
+        node_id = n.get('id', '')
+        data = n.get('data', {})
+        label = data.get('label', 'Unnamed')
+        ctype = data.get('componentType', n.get('type', 'unknown'))
+        comp_details.append(f"- {label} ({ctype})")
+        node_lookup[node_id] = label
+
+    conn_details = []
+    for e in edges:
+        src = node_lookup.get(e.get('source'), 'Unknown')
+        tgt = node_lookup.get(e.get('target'), 'Unknown')
+        conn_details.append(f"{src} -> {tgt}")
+
+    system_prompt = (
+        "You are an expert Cloud Architect and System Design Interviewer. "
+        "Review the provided architecture topology. "
+        "Provide exactly ONE deep architectural positive insight, and ONE advanced issue/warning. "
+        "Focus on things beyond basic rules (e.g. edge-case scaling, security, data consistency, or advanced patterns). "
+        "Return the response ONLY as valid JSON matching this schema:\n"
+        "{\n"
+        '  "positives": [{"title": "...", "description": "..."}],\n'
+        '  "issues": [{"severity": "info", "title": "...", "description": "...", "suggestion": "..."}]\n'
+        "}\n"
+        "Do not include any other text or markdown formatting outside the JSON."
+    )
+
+    user_prompt = (
+        f"Components:\n" + "\n".join(comp_details) +
+        f"\n\nConnections:\n" + "\n".join(conn_details)
+    )
+
+    try:
+        data = json.dumps({
+            "model": "meta/llama-3.1-70b-instruct",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.2,
+            "max_tokens": 512,
+        }).encode()
+
+        req = urllib.request.Request(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            content = result['choices'][0]['message']['content']
+            
+            # Clean up markdown code blocks if the LLM adds them despite instructions
+            if content.startswith('```json'):
+                content = content[7:]
+            if content.startswith('```'):
+                content = content[3:]
+            if content.endswith('```'):
+                content = content[:-3]
+                
+            parsed = json.loads(content.strip())
+            return parsed
+            
+    except Exception as e:
+        print(f"Nemotron API Error: {e}")
+        return None

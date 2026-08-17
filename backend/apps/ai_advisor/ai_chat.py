@@ -181,8 +181,9 @@ def _try_llm_response(message, design_context):
     """
     openai_key = os.getenv('OPENAI_API_KEY')
     anthropic_key = os.getenv('ANTHROPIC_API_KEY')
+    nvidia_key = os.getenv('NVIDIA_API_KEY')
 
-    if not openai_key and not anthropic_key:
+    if not openai_key and not anthropic_key and not nvidia_key:
         return None
 
     # Build context about the current design
@@ -208,13 +209,49 @@ def _try_llm_response(message, design_context):
     user_prompt = f"{message}{design_description}"
 
     try:
-        if openai_key:
+        if nvidia_key:
+            return _call_nemotron(nvidia_key, system_prompt, user_prompt)
+        elif openai_key:
             return _call_openai(openai_key, system_prompt, user_prompt)
         elif anthropic_key:
             return _call_anthropic(anthropic_key, system_prompt, user_prompt)
     except Exception as e:
+        print(f"LLM API Error: {e}")
         # If LLM call fails, fall back to rule-based
         return None
+
+def _call_nemotron(api_key, system_prompt, user_prompt):
+    """Call Nvidia Nemotron API."""
+    import urllib.request
+    
+    data = json.dumps({
+        "model": "meta/llama-3.1-70b-instruct",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "max_tokens": 800,
+        "temperature": 0.7,
+    }).encode()
+
+    req = urllib.request.Request(
+        "https://integrate.api.nvidia.com/v1/chat/completions",
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+    )
+
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        result = json.loads(resp.read())
+        content = result['choices'][0]['message']['content']
+        return {
+            'response': content,
+            'sources': ['Nvidia Nemotron 70B'],
+            'related_topics': [],
+            'powered_by': 'ai',
+        }
 
 
 def _call_openai(api_key, system_prompt, user_prompt):
