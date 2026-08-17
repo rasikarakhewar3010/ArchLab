@@ -7,7 +7,7 @@ from .ai_chat import get_chat_response, suggest_next_components
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def analyze_architecture(request):
     """
     POST /api/ai/analyze/
@@ -38,7 +38,7 @@ def analyze_architecture(request):
     result = analyze_design(nodes, edges)
 
     # If a design_id was provided, save the feedback to the design
-    if design_id:
+    if design_id and request.user.is_authenticated:
         from apps.designs.models import Design
         try:
             design = Design.objects.get(id=design_id, author=request.user)

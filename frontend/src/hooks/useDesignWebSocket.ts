@@ -1,4 +1,8 @@
-import useWebSocket from 'react-use-websocket';
+import useWebSocketModule from 'react-use-websocket';
+
+const useWebSocket = typeof useWebSocketModule === 'function' 
+  ? useWebSocketModule 
+  : (useWebSocketModule as any)?.useWebSocket || (useWebSocketModule as any)?.default?.useWebSocket || (useWebSocketModule as any)?.default;
 import { useCallback } from 'react';
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { Node, Edge, NodeChange, EdgeChange } from '@xyflow/react';

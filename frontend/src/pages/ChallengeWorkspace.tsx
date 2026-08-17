@@ -230,6 +230,20 @@ export default function ChallengeWorkspace() {
             setExternalEdges={setEdges}
             edgeTraffic={simulation.edgeTraffic}
             isSimulating={simulation.isActive}
+            designId={challenge.id} // Ensure design ID is passed for websocket
+          />
+          
+          <SimulationPanel
+            simState={simulation.simState}
+            rps={simulation.rps}
+            speedMultiplier={simulation.speedMultiplier}
+            systemMetrics={simulation.systemMetrics}
+            onStart={simulation.start}
+            onPause={simulation.pause}
+            onResume={simulation.resume}
+            onStop={simulation.stop}
+            onRpsChange={simulation.setRps}
+            onSpeedChange={simulation.setSpeedMultiplier}
           />
         </div>
 
@@ -243,19 +257,6 @@ export default function ChallengeWorkspace() {
           />
         )}
       </main>
-
-      <SimulationPanel
-        simState={simulation.simState}
-        rps={simulation.rps}
-        speedMultiplier={simulation.speedMultiplier}
-        systemMetrics={simulation.systemMetrics}
-        onStart={simulation.start}
-        onPause={simulation.pause}
-        onResume={simulation.resume}
-        onStop={simulation.stop}
-        onRpsChange={simulation.setRps}
-        onSpeedChange={simulation.setSpeedMultiplier}
-      />
 
       {/* Result Modal */}
       {showResult && result && (

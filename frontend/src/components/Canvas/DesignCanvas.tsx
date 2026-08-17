@@ -314,7 +314,7 @@ export default function DesignCanvas({
           }}
         />
 
-        <Panel position="bottom-center" className="canvas-stats-panel">
+        <Panel position="top-center" className="canvas-stats-panel">
           <span>{nodes.length} components</span>
           <span className="stats-divider">·</span>
           <span>{edges.length} connections</span>

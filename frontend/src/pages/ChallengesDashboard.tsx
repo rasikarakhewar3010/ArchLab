@@ -183,7 +183,9 @@ export default function ChallengesDashboard() {
         const res = await fetch('/api/challenges/');
         if (res.ok) {
           const data = await res.json();
-          setChallenges(data.length > 0 ? data : MOCK_CHALLENGES);
+          // Handle both DRF paginated responses and plain arrays
+          const items = Array.isArray(data) ? data : (data.results || []);
+          setChallenges(items.length > 0 ? items : MOCK_CHALLENGES);
         } else {
           setChallenges(MOCK_CHALLENGES);
         }

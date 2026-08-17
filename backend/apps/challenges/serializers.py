@@ -9,7 +9,9 @@ class ChallengeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
         fields = [
-            'id', 'title', 'slug', 'difficulty', 'companies',
+            'id', 'title', 'slug', 'description', 'difficulty',
+            'functional_requirements', 'non_functional_requirements',
+            'hints', 'companies',
             'time_limit_minutes', 'is_free', 'attempt_count',
         ]
 

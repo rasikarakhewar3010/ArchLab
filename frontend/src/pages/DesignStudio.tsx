@@ -74,6 +74,19 @@ export default function DesignStudio() {
             edgeTraffic={simulation.edgeTraffic}
             isSimulating={simulation.isActive}
           />
+
+          <SimulationPanel
+            simState={simulation.simState}
+            rps={simulation.rps}
+            speedMultiplier={simulation.speedMultiplier}
+            systemMetrics={simulation.systemMetrics}
+            onStart={simulation.start}
+            onPause={simulation.pause}
+            onResume={simulation.resume}
+            onStop={simulation.stop}
+            onRpsChange={simulation.setRps}
+            onSpeedChange={simulation.setSpeedMultiplier}
+          />
         </div>
 
         {selectedNodeId && (
@@ -86,19 +99,6 @@ export default function DesignStudio() {
           />
         )}
       </main>
-
-      <SimulationPanel
-        simState={simulation.simState}
-        rps={simulation.rps}
-        speedMultiplier={simulation.speedMultiplier}
-        systemMetrics={simulation.systemMetrics}
-        onStart={simulation.start}
-        onPause={simulation.pause}
-        onResume={simulation.resume}
-        onStop={simulation.stop}
-        onRpsChange={simulation.setRps}
-        onSpeedChange={simulation.setSpeedMultiplier}
-      />
     </div>
   );
 }
