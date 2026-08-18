@@ -154,11 +154,17 @@ ASGI_APPLICATION = 'config.asgi.application'
 # =============================================================================
 if os.getenv('DB_ENGINE', 'sqlite3') == 'postgresql':
     # Use Redis when in production/Docker mode
+    redis_url = os.getenv('REDIS_URL')
+    if redis_url:
+        redis_hosts = [redis_url]
+    else:
+        redis_hosts = [(os.getenv('REDIS_HOST', 'localhost'), int(os.getenv('REDIS_PORT', 6379)))]
+
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                "hosts": [(os.getenv('REDIS_HOST', 'localhost'), 6379)],
+                "hosts": redis_hosts,
             },
         },
     }
