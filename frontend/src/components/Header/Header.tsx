@@ -7,7 +7,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, Sparkles, Menu, Play, Pause, Trophy, BookOpen, LogOut, Layers, LogIn } from 'lucide-react';
+import { Save, Sparkles, Menu, Play, Pause, Trophy, BookOpen, LogOut, Layers, LogIn, Compass } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { SimulationState } from '../../simulation/types';
 import './Header.css';
@@ -19,6 +19,7 @@ interface HeaderProps {
   onToggleSidebar?: () => void;
   simState?: SimulationState;
   onSimToggle?: () => void;
+  onStartTour?: () => void;
 }
 
 export default function Header({
@@ -28,6 +29,7 @@ export default function Header({
   onToggleSidebar,
   simState = 'idle',
   onSimToggle,
+  onStartTour,
 }: HeaderProps) {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
@@ -49,7 +51,7 @@ export default function Header({
   return (
     <header className="app-header">
       <div className="header-left">
-        <button className="btn btn-ghost btn-icon" onClick={onToggleSidebar} title="Toggle sidebar">
+        <button className="btn btn-ghost btn-icon" onClick={onToggleSidebar} title="Toggle sidebar" data-tour="sidebar-toggle">
           <Menu size={18} />
         </button>
         
@@ -60,7 +62,7 @@ export default function Header({
 
         <div className="header-divider" />
 
-        <div className="header-title">
+        <div className="header-title" data-tour="design-title">
           <input
             type="text"
             className="title-input"
@@ -71,11 +73,23 @@ export default function Header({
       </div>
 
       <div className="header-right">
+        {/* Guided Tour */}
+        <button
+          className="btn btn-ghost btn-sm header-tour-btn"
+          onClick={onStartTour}
+          title="Take a guided tour"
+          data-tour="restart-tour"
+        >
+          <Compass size={14} />
+          Guided Tour
+        </button>
+
         {/* Learn Link */}
         <button
           className="btn btn-ghost btn-sm"
           onClick={() => navigate('/learn')}
           title="Learning Hub"
+          data-tour="learn-btn"
         >
           <BookOpen size={14} />
           Learn
@@ -86,6 +100,7 @@ export default function Header({
           className="btn btn-ghost btn-sm header-challenges-btn"
           onClick={() => navigate('/challenges')}
           title="System Design Challenges"
+          data-tour="challenges-btn"
         >
           <Trophy size={14} />
           Challenges
@@ -96,25 +111,26 @@ export default function Header({
           className={`btn btn-sm ${isSimulating ? 'btn-sim-active' : 'btn-secondary'}`}
           onClick={onSimToggle}
           title={isSimulating ? 'Stop Simulation' : 'Start Simulation'}
+          data-tour="simulate-btn"
         >
           {isSimulating ? <Pause size={14} /> : <Play size={14} />}
           {isSimulating ? 'Simulating' : 'Simulate'}
           {isSimulating && <span className="header-sim-dot" />}
         </button>
 
-        <button className="btn btn-secondary btn-sm" onClick={onSave}>
+        <button className="btn btn-secondary btn-sm" onClick={onSave} data-tour="save-btn">
           <Save size={14} />
           Save
         </button>
 
-        <button className="btn btn-primary btn-sm" onClick={onAnalyze}>
+        <button className="btn btn-primary btn-sm" onClick={onAnalyze} data-tour="analyze-btn">
           <Sparkles size={14} />
           Analyze with AI
         </button>
 
         {/* User Auth */}
         {isAuthenticated && user ? (
-          <div className="header-user-menu" ref={menuRef}>
+          <div className="header-user-menu" ref={menuRef} data-tour="auth-btn">
             <button
               className="header-avatar-btn"
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -150,7 +166,7 @@ export default function Header({
             )}
           </div>
         ) : (
-          <button className="btn btn-ghost btn-sm header-signin-btn" onClick={() => navigate('/auth')}>
+          <button className="btn btn-ghost btn-sm header-signin-btn" onClick={() => navigate('/auth')} data-tour="auth-btn">
             <LogIn size={14} />
             Sign In
           </button>

@@ -65,7 +65,7 @@ export default function ComponentPalette() {
     .filter((cat) => cat.components.length > 0);
 
   return (
-    <div className="component-palette">
+    <div className="component-palette" data-tour="component-palette">
       <div className="palette-header">
         <h2 className="palette-title">
           <Icons.LayoutGrid size={18} />

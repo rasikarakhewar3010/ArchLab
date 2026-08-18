@@ -17,6 +17,7 @@ import DesignCanvas from '../components/Canvas/DesignCanvas';
 import PropertiesPanel from '../components/Sidebar/PropertiesPanel';
 import SimulationPanel from '../components/Simulation/SimulationPanel';
 import AIFeedbackModal from '../components/Modals/AIFeedbackModal';
+import OnboardingTour from '../components/Onboarding/OnboardingTour';
 import type { Node, Edge } from '@xyflow/react';
 import type { ArchNodeData, AIFeedback } from '../types';
 import { useSimulation } from '../hooks/useSimulation';
@@ -48,6 +49,19 @@ export default function DesignStudio() {
 
   // Initialize the simulation hook
   const simulation = useSimulation(nodes, edges, setNodes);
+
+  // Onboarding tour state
+  const [isTourActive, setIsTourActive] = useState(false);
+
+  // Auto-launch tour for first-time visitors
+  useEffect(() => {
+    const tourCompleted = localStorage.getItem('archlab-tour-completed');
+    if (!tourCompleted) {
+      // Small delay so the UI renders first and elements are in the DOM
+      const timer = setTimeout(() => setIsTourActive(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Load existing design if ?id= is present
   useEffect(() => {
@@ -166,6 +180,7 @@ export default function DesignStudio() {
         onAnalyze={handleAnalyze}
         simState={simulation.simState}
         onSimToggle={handleSimToggle}
+        onStartTour={() => setIsTourActive(true)}
       />
 
       {/* Save/Analyze status toast */}
@@ -189,7 +204,7 @@ export default function DesignStudio() {
       <main className="app-main">
         {isSidebarOpen && <ComponentPalette />}
 
-        <div className="app-canvas-area">
+        <div className="app-canvas-area" data-tour="design-canvas">
           <DesignCanvas
             onNodeSelect={setSelectedNodeId}
             externalNodes={nodes}
@@ -232,6 +247,12 @@ export default function DesignStudio() {
           onClose={() => setShowFeedback(false)}
         />
       )}
+
+      {/* Onboarding Guided Tour */}
+      <OnboardingTour
+        isActive={isTourActive}
+        onEnd={() => setIsTourActive(false)}
+      />
     </div>
   );
 }

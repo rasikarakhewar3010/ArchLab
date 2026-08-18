@@ -70,7 +70,7 @@ export default function SimulationPanel({
   };
 
   return (
-    <div className={`simulation-panel ${isIdle ? '' : 'simulation-panel-active'}`}>
+    <div className={`simulation-panel ${isIdle ? '' : 'simulation-panel-active'}`} data-tour="simulation-panel">
       {/* Left: Controls */}
       <div className="sim-controls">
         {isIdle && (
