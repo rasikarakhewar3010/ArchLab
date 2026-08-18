@@ -4,22 +4,60 @@ services:
   db:
     image: postgres:15-alpine
     container_name: archlab_db
-    environment:
-      POSTGRES_DB: archlab
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+    # 🔒 Removed ports mapping (e.g., "5432:5432") for maximum security.
+    # The database is only accessible to other containers in this Docker network.
+    env_file:
+      - ./backend/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-archlab}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     container_name: archlab_redis
-    ports:
-      - "6379:6379"
+    # 🔒 Removed ports mapping ("6379:6379") for maximum security.
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: archlab_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # Hardcoded override variables that govern docker routing
+      - DB_ENGINE=postgresql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: archlab_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
