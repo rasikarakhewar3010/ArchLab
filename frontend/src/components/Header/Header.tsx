@@ -3,11 +3,27 @@
  * ==============================
  * Shows branding, navigation links, simulation toggle, save, analyze,
  * and user auth status (login button or user avatar dropdown).
+ * Powered by Hugeicons vector iconography.
  */
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, Sparkles, Menu, Play, Pause, Trophy, BookOpen, LogOut, Layers, LogIn, Compass } from 'lucide-react';
+import {
+  Menu01Icon,
+  Compass01Icon,
+  BookOpen01Icon,
+  TrophyIcon,
+  PauseIcon,
+  PlayIcon,
+  FloppyDiskIcon,
+  SparklesIcon,
+  Layers01Icon,
+  LogOutIcon,
+  LogInIcon,
+  UserIcon,
+} from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
+import BrandLogo from '../common/BrandLogo';
 import { useAuth } from '../../context/AuthContext';
 import type { SimulationState } from '../../simulation/types';
 import './Header.css';
@@ -52,13 +68,10 @@ export default function Header({
     <header className="app-header">
       <div className="header-left">
         <button className="btn btn-ghost btn-icon" onClick={onToggleSidebar} title="Toggle sidebar" data-tour="sidebar-toggle">
-          <Menu size={18} />
+          <HugeiconsIcon icon={Menu01Icon} size={18} />
         </button>
         
-        <div className="header-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <img src="/logo.png" alt="ArchLab Logo" style={{ height: '28px', width: 'auto' }} />
-          <span className="logo-text">ArchLab</span>
-        </div>
+        <BrandLogo size="md" onClick={() => navigate('/')} />
 
         <div className="header-divider" />
 
@@ -80,7 +93,7 @@ export default function Header({
           title="Take a guided tour"
           data-tour="restart-tour"
         >
-          <Compass size={14} />
+          <HugeiconsIcon icon={Compass01Icon} size={14} />
           Guided Tour
         </button>
 
@@ -91,7 +104,7 @@ export default function Header({
           title="Learning Hub"
           data-tour="learn-btn"
         >
-          <BookOpen size={14} />
+          <HugeiconsIcon icon={BookOpen01Icon} size={14} />
           Learn
         </button>
 
@@ -102,7 +115,7 @@ export default function Header({
           title="System Design Challenges"
           data-tour="challenges-btn"
         >
-          <Trophy size={14} />
+          <HugeiconsIcon icon={TrophyIcon} size={14} />
           Challenges
         </button>
 
@@ -113,18 +126,22 @@ export default function Header({
           title={isSimulating ? 'Stop Simulation' : 'Start Simulation'}
           data-tour="simulate-btn"
         >
-          {isSimulating ? <Pause size={14} /> : <Play size={14} />}
+          {isSimulating ? (
+            <HugeiconsIcon icon={PauseIcon} size={14} />
+          ) : (
+            <HugeiconsIcon icon={PlayIcon} size={14} />
+          )}
           {isSimulating ? 'Simulating' : 'Simulate'}
           {isSimulating && <span className="header-sim-dot" />}
         </button>
 
         <button className="btn btn-secondary btn-sm" onClick={onSave} data-tour="save-btn">
-          <Save size={14} />
+          <HugeiconsIcon icon={FloppyDiskIcon} size={14} />
           Save
         </button>
 
         <button className="btn btn-primary btn-sm" onClick={onAnalyze} data-tour="analyze-btn">
-          <Sparkles size={14} />
+          <HugeiconsIcon icon={SparklesIcon} size={14} />
           Analyze with AI
         </button>
 
@@ -140,7 +157,7 @@ export default function Header({
                 <img src={user.avatar} alt={user.username} className="header-avatar-img" />
               ) : (
                 <div className="header-avatar-placeholder">
-                  {user.username.charAt(0).toUpperCase()}
+                  <HugeiconsIcon icon={UserIcon} size={16} />
                 </div>
               )}
             </button>
@@ -153,21 +170,21 @@ export default function Header({
                 </div>
                 <div className="header-dropdown-divider" />
                 <button className="header-dropdown-item" onClick={() => { navigate('/my-designs'); setShowUserMenu(false); }}>
-                  <Layers size={14} /> My Designs
+                  <HugeiconsIcon icon={Layers01Icon} size={14} /> My Designs
                 </button>
                 <button className="header-dropdown-item" onClick={() => { navigate('/learn'); setShowUserMenu(false); }}>
-                  <BookOpen size={14} /> Learning Hub
+                  <HugeiconsIcon icon={BookOpen01Icon} size={14} /> Learning Hub
                 </button>
                 <div className="header-dropdown-divider" />
                 <button className="header-dropdown-item header-dropdown-danger" onClick={() => { logout(); setShowUserMenu(false); }}>
-                  <LogOut size={14} /> Sign Out
+                  <HugeiconsIcon icon={LogOutIcon} size={14} /> Sign Out
                 </button>
               </div>
             )}
           </div>
         ) : (
           <button className="btn btn-ghost btn-sm header-signin-btn" onClick={() => navigate('/auth')} data-tour="auth-btn">
-            <LogIn size={14} />
+            <HugeiconsIcon icon={LogInIcon} size={14} />
             Sign In
           </button>
         )}

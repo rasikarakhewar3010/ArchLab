@@ -3,15 +3,21 @@
  * ================================================================================
  *
  * When a user selects a node on the canvas, this panel shows its properties.
- * Phase 2 additions:
- *   - Live simulation metrics with color-coded badges
- *   - Status indicator
- *   - Saturation visual
+ * Powered by Hugeicons.
  */
 
 import { useState, useEffect } from 'react';
-import * as Icons from 'lucide-react';
-import type { LucideProps } from 'lucide-react';
+import {
+  Icon,
+  CursorPointer01Icon,
+  Cancel01Icon,
+  Activity01Icon,
+  ChartIncreaseIcon,
+  Clock01Icon,
+  TriangleAlertIcon,
+  DashboardSpeed01Icon,
+} from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 import type { Node } from '@xyflow/react';
 import type { ArchNodeData } from '../../types';
 import './PropertiesPanel.css';
@@ -55,13 +61,11 @@ export default function PropertiesPanel({
   if (!selectedNodeId || !node || !nodeData) {
     return (
       <div className="properties-panel empty">
-        <Icons.MousePointerClick size={48} className="empty-icon" />
+        <HugeiconsIcon icon={CursorPointer01Icon} size={48} className="empty-icon" />
         <p className="empty-text">Select a component on the canvas to configure it.</p>
       </div>
     );
   }
-
-  const IconComponent = ((Icons as any)[nodeData.icon] || Icons.Box) as React.ComponentType<LucideProps>;
 
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalLabel(e.target.value);
@@ -131,7 +135,7 @@ export default function PropertiesPanel({
       <div className="panel-header">
         <div className="panel-title-wrapper">
           <div className="panel-icon" style={{ background: nodeData.color }}>
-            <IconComponent size={16} />
+            <Icon name={nodeData.icon} size={16} color="#ffffff" />
           </div>
           <h2 className="panel-title">Properties</h2>
           {/* Status badge during simulation */}
@@ -142,7 +146,7 @@ export default function PropertiesPanel({
           )}
         </div>
         <button className="btn btn-ghost btn-icon" onClick={onClose}>
-          <Icons.X size={16} />
+          <HugeiconsIcon icon={Cancel01Icon} size={16} />
         </button>
       </div>
 
@@ -151,19 +155,23 @@ export default function PropertiesPanel({
         {hasLiveMetrics && nodeData.metrics && (
           <div className="settings-section">
             <h3 className="section-title">
-              <Icons.Activity size={12} />
+              <HugeiconsIcon icon={Activity01Icon} size={12} />
               Live Metrics
             </h3>
             <div className="live-metrics-grid">
               <div className="live-metric-card">
-                <div className="live-metric-icon"><Icons.TrendingUp size={14} /></div>
+                <div className="live-metric-icon">
+                  <HugeiconsIcon icon={ChartIncreaseIcon} size={14} />
+                </div>
                 <div className="live-metric-data">
                   <span className="live-metric-value">{formatMetric(nodeData.metrics.throughput || 0)}/s</span>
                   <span className="live-metric-label">Throughput</span>
                 </div>
               </div>
               <div className="live-metric-card">
-                <div className="live-metric-icon"><Icons.Clock size={14} /></div>
+                <div className="live-metric-icon">
+                  <HugeiconsIcon icon={Clock01Icon} size={14} />
+                </div>
                 <div className="live-metric-data">
                   <span className="live-metric-value">{nodeData.metrics.latency || 0}ms</span>
                   <span className="live-metric-label">Latency</span>
@@ -171,7 +179,7 @@ export default function PropertiesPanel({
               </div>
               <div className="live-metric-card">
                 <div className={`live-metric-icon ${(nodeData.metrics.errorRate || 0) > 5 ? 'metric-danger' : ''}`}>
-                  <Icons.AlertTriangle size={14} />
+                  <HugeiconsIcon icon={TriangleAlertIcon} size={14} />
                 </div>
                 <div className="live-metric-data">
                   <span className={`live-metric-value ${(nodeData.metrics.errorRate || 0) > 5 ? 'metric-danger' : ''}`}>
@@ -181,7 +189,9 @@ export default function PropertiesPanel({
                 </div>
               </div>
               <div className="live-metric-card">
-                <div className="live-metric-icon"><Icons.Gauge size={14} /></div>
+                <div className="live-metric-icon">
+                  <HugeiconsIcon icon={DashboardSpeed01Icon} size={14} />
+                </div>
                 <div className="live-metric-data">
                   <span className="live-metric-value">{(nodeData.metrics.saturation || 0).toFixed(1)}%</span>
                   <span className="live-metric-label">Saturation</span>
@@ -244,7 +254,7 @@ export default function PropertiesPanel({
           <div className="settings-section">
             <h3 className="section-title">Metrics (Simulation)</h3>
             <div className="metrics-placeholder">
-              <Icons.Activity size={16} />
+              <HugeiconsIcon icon={Activity01Icon} size={16} />
               <p>Metrics will appear here when simulation is running.</p>
             </div>
           </div>

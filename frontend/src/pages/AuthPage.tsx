@@ -2,12 +2,22 @@
  * AuthPage — Premium Login & Register Page
  * ===========================================
  * Full-viewport glassmorphism auth UI with animated form transitions.
+ * Powered by Hugeicons.
  */
 
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Cpu, Eye, EyeOff, ArrowRight, UserPlus, LogIn, Sparkles } from 'lucide-react';
+import {
+  ViewIcon,
+  ViewOffIcon,
+  ArrowRight01Icon,
+  UserAdd01Icon,
+  LogInIcon,
+  SparklesIcon,
+} from '../components/common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
+import BrandLogo from '../components/common/BrandLogo';
 import './AuthPage.css';
 
 type AuthMode = 'login' | 'register';
@@ -64,12 +74,10 @@ export default function AuthPage() {
       <div className="auth-container">
         {/* Logo + Branding */}
         <div className="auth-brand" onClick={() => navigate('/')}>
-          <div className="auth-logo">
-            <Cpu size={28} />
-          </div>
+          <BrandLogo size="xl" showText={false} />
           <h1 className="auth-brand-name">ArchLab</h1>
-          <p className="auth-tagline">
-            <Sparkles size={14} />
+          <p className="auth-tagline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <HugeiconsIcon icon={SparklesIcon} size={14} />
             Master System Design
           </p>
         </div>
@@ -82,14 +90,14 @@ export default function AuthPage() {
               className={`auth-tab ${mode === 'login' ? 'active' : ''}`}
               onClick={() => switchMode('login')}
             >
-              <LogIn size={14} />
+              <HugeiconsIcon icon={LogInIcon} size={14} />
               Sign In
             </button>
             <button
               className={`auth-tab ${mode === 'register' ? 'active' : ''}`}
               onClick={() => switchMode('register')}
             >
-              <UserPlus size={14} />
+              <HugeiconsIcon icon={UserAdd01Icon} size={14} />
               Create Account
             </button>
           </div>
@@ -154,7 +162,11 @@ export default function AuthPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? (
+                    <HugeiconsIcon icon={ViewOffIcon} size={16} />
+                  ) : (
+                    <HugeiconsIcon icon={ViewIcon} size={16} />
+                  )}
                 </button>
               </div>
             </div>
@@ -185,7 +197,7 @@ export default function AuthPage() {
               ) : (
                 <>
                   {mode === 'login' ? 'Sign In' : 'Create Account'}
-                  <ArrowRight size={16} />
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
                 </>
               )}
             </button>
@@ -200,8 +212,10 @@ export default function AuthPage() {
           <button
             className="btn btn-ghost auth-guest-btn"
             onClick={() => navigate('/')}
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
           >
-            Continue as Guest →
+            Continue as Guest
+            <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
           </button>
         </div>
 

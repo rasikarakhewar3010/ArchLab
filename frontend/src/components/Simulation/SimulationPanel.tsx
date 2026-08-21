@@ -6,9 +6,20 @@
  *   - RPS slider (logarithmic scale: 100 → 1,000,000)
  *   - Speed control (1x, 2x, 5x)
  *   - Live system metrics dashboard
+ * Powered by Hugeicons.
  */
 
-import { Play, Pause, Square, Gauge, Zap, AlertTriangle, Clock, Activity } from 'lucide-react';
+import {
+  PlayIcon,
+  PauseIcon,
+  SquareIcon,
+  DashboardSpeed01Icon,
+  FlashIcon,
+  TriangleAlertIcon,
+  Clock01Icon,
+  Activity01Icon,
+} from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 import type { SimulationState, SystemMetrics } from '../../simulation/types';
 import './SimulationPanel.css';
 
@@ -75,22 +86,22 @@ export default function SimulationPanel({
       <div className="sim-controls">
         {isIdle && (
           <button className="sim-btn sim-btn-play" onClick={onStart} title="Start Simulation">
-            <Play size={16} />
+            <HugeiconsIcon icon={PlayIcon} size={16} />
           </button>
         )}
         {isRunning && (
           <button className="sim-btn sim-btn-pause" onClick={onPause} title="Pause Simulation">
-            <Pause size={16} />
+            <HugeiconsIcon icon={PauseIcon} size={16} />
           </button>
         )}
         {isPaused && (
           <button className="sim-btn sim-btn-play" onClick={onResume} title="Resume Simulation">
-            <Play size={16} />
+            <HugeiconsIcon icon={PlayIcon} size={16} />
           </button>
         )}
         {!isIdle && (
           <button className="sim-btn sim-btn-stop" onClick={onStop} title="Stop Simulation">
-            <Square size={14} />
+            <HugeiconsIcon icon={SquareIcon} size={14} />
           </button>
         )}
 
@@ -105,7 +116,7 @@ export default function SimulationPanel({
       {/* Center: RPS Slider */}
       <div className="sim-rps-section">
         <div className="sim-rps-label">
-          <Gauge size={12} />
+          <HugeiconsIcon icon={DashboardSpeed01Icon} size={13} />
           <span>Traffic</span>
         </div>
         <input
@@ -137,24 +148,24 @@ export default function SimulationPanel({
       {!isIdle && (
         <div className="sim-metrics">
           <div className="sim-metric">
-            <Activity size={11} />
+            <HugeiconsIcon icon={Activity01Icon} size={11} />
             <span className="sim-metric-value">{formatNumber(systemMetrics.totalThroughput)}</span>
             <span className="sim-metric-label">req/s</span>
           </div>
           <div className="sim-metric">
-            <Clock size={11} />
+            <HugeiconsIcon icon={Clock01Icon} size={11} />
             <span className="sim-metric-value">{systemMetrics.averageLatency.toFixed(1)}</span>
             <span className="sim-metric-label">ms</span>
           </div>
           <div className="sim-metric">
-            <AlertTriangle size={11} />
+            <HugeiconsIcon icon={TriangleAlertIcon} size={11} />
             <span className={`sim-metric-value ${systemMetrics.overallErrorRate > 5 ? 'text-danger' : ''}`}>
               {systemMetrics.overallErrorRate.toFixed(1)}%
             </span>
             <span className="sim-metric-label">err</span>
           </div>
           <div className="sim-metric">
-            <Zap size={11} />
+            <HugeiconsIcon icon={FlashIcon} size={11} />
             <span className="sim-metric-value sim-node-counts">
               <span className="count-healthy">{systemMetrics.healthyNodes}</span>
               {systemMetrics.warningNodes > 0 && <span className="count-warning">{systemMetrics.warningNodes}</span>}

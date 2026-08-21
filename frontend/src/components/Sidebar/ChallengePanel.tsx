@@ -3,24 +3,25 @@
  * ===================================================
  * Shows challenge details, requirements checklist, progressive hints,
  * a countdown timer, and the submit button.
+ * Powered by Hugeicons.
  */
 
 import { useState } from 'react';
 import {
-  ArrowLeft,
-  Clock,
-  Circle,
-  Lightbulb,
-  Eye,
-  EyeOff,
-  Send,
-  Loader2,
-  Target,
-  Flame,
-  Building2,
-  ChevronDown,
-  ChevronRight,
-} from 'lucide-react';
+  ArrowLeft01Icon,
+  Clock01Icon,
+  CheckmarkCircle01Icon,
+  BulbIcon,
+  ViewIcon,
+  ViewOffIcon,
+  Target01Icon,
+  FireIcon,
+  Building02Icon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  AiMagicIcon,
+} from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 import type { Challenge } from '../../types';
 import './ChallengePanel.css';
 
@@ -82,7 +83,7 @@ export default function ChallengePanel({
       {/* Header */}
       <div className="cp-header">
         <button className="btn btn-ghost btn-icon btn-xs" onClick={onBack} title="Back to Challenges">
-          <ArrowLeft size={16} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
         </button>
         <span className="cp-header-label">CHALLENGE</span>
       </div>
@@ -100,7 +101,7 @@ export default function ChallengePanel({
           <p className="cp-description">{challenge.description}</p>
           {challenge.companies.length > 0 && (
             <div className="cp-companies">
-              <Building2 size={11} />
+              <HugeiconsIcon icon={Building02Icon} size={11} />
               {challenge.companies.map((c) => (
                 <span key={c} className="cp-company-tag">{c}</span>
               ))}
@@ -111,7 +112,7 @@ export default function ChallengePanel({
         {/* Timer */}
         <div className={`cp-timer ${isOvertime ? 'overtime' : ''}`}>
           <div className="timer-row">
-            <Clock size={14} />
+            <HugeiconsIcon icon={Clock01Icon} size={14} />
             <span className="timer-value">
               {isOvertime ? '+' : ''}{formatTime(isOvertime ? timeElapsed - timeLimitSec : timeRemaining)}
             </span>
@@ -130,11 +131,11 @@ export default function ChallengePanel({
         {/* Design Stats */}
         <div className="cp-stats">
           <div className="cp-stat">
-            <Target size={12} />
+            <HugeiconsIcon icon={Target01Icon} size={12} />
             <span>{nodeCount} components</span>
           </div>
           <div className="cp-stat">
-            <Flame size={12} />
+            <HugeiconsIcon icon={FireIcon} size={12} />
             <span>{edgeCount} connections</span>
           </div>
         </div>
@@ -142,7 +143,11 @@ export default function ChallengePanel({
         {/* Functional Requirements */}
         <div className="cp-section">
           <button className="cp-section-header" onClick={() => toggleSection('functional')}>
-            {sectionsOpen.functional ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {sectionsOpen.functional ? (
+              <HugeiconsIcon icon={ChevronDownIcon} size={14} />
+            ) : (
+              <HugeiconsIcon icon={ChevronRightIcon} size={14} />
+            )}
             <span>Functional Requirements</span>
             <span className="cp-section-count">{challenge.functional_requirements.length}</span>
           </button>
@@ -150,7 +155,7 @@ export default function ChallengePanel({
             <ul className="cp-checklist">
               {challenge.functional_requirements.map((req, i) => (
                 <li key={i} className="cp-check-item">
-                  <Circle size={12} className="check-icon" />
+                  <HugeiconsIcon icon={CheckmarkCircle01Icon} size={12} className="check-icon" />
                   <span>{req}</span>
                 </li>
               ))}
@@ -161,7 +166,11 @@ export default function ChallengePanel({
         {/* Non-Functional Requirements */}
         <div className="cp-section">
           <button className="cp-section-header" onClick={() => toggleSection('nonFunctional')}>
-            {sectionsOpen.nonFunctional ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {sectionsOpen.nonFunctional ? (
+              <HugeiconsIcon icon={ChevronDownIcon} size={14} />
+            ) : (
+              <HugeiconsIcon icon={ChevronRightIcon} size={14} />
+            )}
             <span>Non-Functional Requirements</span>
             <span className="cp-section-count">{challenge.non_functional_requirements.length}</span>
           </button>
@@ -169,7 +178,7 @@ export default function ChallengePanel({
             <ul className="cp-checklist">
               {challenge.non_functional_requirements.map((req, i) => (
                 <li key={i} className="cp-check-item">
-                  <Circle size={12} className="check-icon" />
+                  <HugeiconsIcon icon={CheckmarkCircle01Icon} size={12} className="check-icon" />
                   <span>{req}</span>
                 </li>
               ))}
@@ -180,8 +189,12 @@ export default function ChallengePanel({
         {/* Hints */}
         <div className="cp-section">
           <button className="cp-section-header" onClick={() => toggleSection('hints')}>
-            {sectionsOpen.hints ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <Lightbulb size={14} className="hint-icon" />
+            {sectionsOpen.hints ? (
+              <HugeiconsIcon icon={ChevronDownIcon} size={14} />
+            ) : (
+              <HugeiconsIcon icon={ChevronRightIcon} size={14} />
+            )}
+            <HugeiconsIcon icon={BulbIcon} size={14} className="hint-icon" />
             <span>Hints</span>
             <span className="cp-section-count">{revealedHints}/{challenge.hints.length}</span>
           </button>
@@ -191,12 +204,12 @@ export default function ChallengePanel({
                 <div key={i} className={`cp-hint ${i < revealedHints ? 'revealed' : 'hidden'}`}>
                   {i < revealedHints ? (
                     <>
-                      <Eye size={12} />
+                      <HugeiconsIcon icon={ViewIcon} size={12} />
                       <span>{hint}</span>
                     </>
                   ) : (
                     <>
-                      <EyeOff size={12} />
+                      <HugeiconsIcon icon={ViewOffIcon} size={12} />
                       <span className="hint-hidden-text">Hint {i + 1} — click to reveal</span>
                     </>
                   )}
@@ -207,7 +220,7 @@ export default function ChallengePanel({
                   className="btn btn-ghost btn-xs reveal-btn"
                   onClick={() => setRevealedHints((h) => h + 1)}
                 >
-                  <Lightbulb size={12} />
+                  <HugeiconsIcon icon={BulbIcon} size={12} />
                   Reveal Next Hint
                 </button>
               )}
@@ -225,12 +238,12 @@ export default function ChallengePanel({
         >
           {isSubmitting ? (
             <>
-              <Loader2 size={16} className="spin" />
+              <span className="auth-spinner" style={{ width: 14, height: 14 }} />
               Analyzing...
             </>
           ) : (
             <>
-              <Send size={16} />
+              <HugeiconsIcon icon={AiMagicIcon} size={16} />
               Submit Design
             </>
           )}

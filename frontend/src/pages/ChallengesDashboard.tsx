@@ -3,22 +3,27 @@
  * =============================================================
  * Displays all available challenges in a premium card grid.
  * Users can filter by difficulty, see company tags, and start challenges.
+ * Powered by Hugeicons vector iconography (zero emojis, zero raster images).
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Trophy,
-  Clock,
-  Flame,
-  Filter,
-  Search,
-  ChevronRight,
-  Cpu,
-  Building2,
-  Lock,
-  Sparkles,
-} from 'lucide-react';
+  TrophyIcon,
+  Clock01Icon,
+  FireIcon,
+  FilterIcon,
+  Search01Icon,
+  ChevronRightIcon,
+  Building02Icon,
+  SecurityLockIcon,
+  SparklesIcon,
+  Award01Icon,
+  FlashIcon,
+  ArrowLeft01Icon,
+} from '../components/common/Icon';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+import BrandLogo from '../components/common/BrandLogo';
 import type { Challenge } from '../types';
 import './ChallengesDashboard.css';
 
@@ -162,11 +167,11 @@ const MOCK_CHALLENGES: Challenge[] = [
   },
 ];
 
-const DIFFICULTY_CONFIG = {
-  easy:   { label: 'Easy',   color: 'var(--color-success)', icon: '🟢' },
-  medium: { label: 'Medium', color: 'var(--color-warning)', icon: '🟡' },
-  hard:   { label: 'Hard',   color: 'var(--color-danger)',  icon: '🔴' },
-  expert: { label: 'Expert', color: '#a855f7',              icon: '🟣' },
+const DIFFICULTY_CONFIG: Record<string, { label: string; color: string; icon: IconSvgElement }> = {
+  easy:   { label: 'Easy',   color: 'var(--color-success)', icon: Award01Icon },
+  medium: { label: 'Medium', color: 'var(--color-warning)', icon: FlashIcon },
+  hard:   { label: 'Hard',   color: 'var(--color-danger)',  icon: FireIcon },
+  expert: { label: 'Expert', color: '#a855f7',              icon: SparklesIcon },
 };
 
 export default function ChallengesDashboard() {
@@ -220,18 +225,13 @@ export default function ChallengesDashboard() {
       {/* Header */}
       <header className="challenges-header">
         <div className="challenges-header-left">
-          <button className="btn btn-ghost btn-icon" onClick={() => navigate('/')} title="Back to Studio">
-            <Cpu size={20} />
-          </button>
-          <div className="challenges-brand">
-            <img src="/logo.png" alt="ArchLab" className="challenges-logo-img" />
-            <span className="challenges-logo-text">ArchLab</span>
-            <span className="challenges-badge">Challenges</span>
-          </div>
+          <BrandLogo size="md" onClick={() => navigate('/')} />
+          <span className="challenges-badge">Challenges</span>
         </div>
         <div className="challenges-header-right">
           <button className="btn btn-secondary btn-sm" onClick={() => navigate('/')}>
-            ← Back to Studio
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            Back to Studio
           </button>
         </div>
       </header>
@@ -240,7 +240,7 @@ export default function ChallengesDashboard() {
       <section className="challenges-hero">
         <div className="hero-content">
           <h1 className="hero-title">
-            <Trophy size={32} className="hero-icon" />
+            <HugeiconsIcon icon={TrophyIcon} size={32} className="hero-icon" />
             System Design Challenges
           </h1>
           <p className="hero-subtitle">
@@ -277,19 +277,19 @@ export default function ChallengesDashboard() {
       {/* Filters */}
       <section className="challenges-filters">
         <div className="filter-group">
-          <Filter size={14} />
+          <HugeiconsIcon icon={FilterIcon} size={14} />
           {['all', 'easy', 'medium', 'hard', 'expert'].map((d) => (
             <button
               key={d}
               className={`filter-btn ${filterDifficulty === d ? 'active' : ''}`}
               onClick={() => setFilterDifficulty(d)}
             >
-              {d === 'all' ? 'All' : DIFFICULTY_CONFIG[d as keyof typeof DIFFICULTY_CONFIG].label}
+              {d === 'all' ? 'All' : DIFFICULTY_CONFIG[d]?.label || d}
             </button>
           ))}
         </div>
         <div className="filter-search">
-          <Search size={14} />
+          <HugeiconsIcon icon={Search01Icon} size={14} />
           <input
             type="text"
             className="search-input"
@@ -304,17 +304,17 @@ export default function ChallengesDashboard() {
       <section className="challenges-grid">
         {loading ? (
           <div className="loading-state">
-            <Sparkles size={24} className="loading-icon" />
+            <HugeiconsIcon icon={SparklesIcon} size={24} className="loading-icon animate-pulse" />
             <p>Loading challenges...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <Search size={24} />
+            <HugeiconsIcon icon={Search01Icon} size={24} />
             <p>No challenges match your filters.</p>
           </div>
         ) : (
           filtered.map((challenge) => {
-            const diffConfig = DIFFICULTY_CONFIG[challenge.difficulty];
+            const diffConfig = DIFFICULTY_CONFIG[challenge.difficulty] || DIFFICULTY_CONFIG.easy;
             return (
               <article
                 key={challenge.id}
@@ -323,7 +323,7 @@ export default function ChallengesDashboard() {
               >
                 {!challenge.is_free && (
                   <div className="card-lock">
-                    <Lock size={12} />
+                    <HugeiconsIcon icon={SecurityLockIcon} size={12} />
                     PRO
                   </div>
                 )}
@@ -333,10 +333,11 @@ export default function ChallengesDashboard() {
                     className="difficulty-badge"
                     style={{ '--badge-color': diffConfig.color } as React.CSSProperties}
                   >
-                    {diffConfig.icon} {diffConfig.label}
+                    <HugeiconsIcon icon={diffConfig.icon} size={12} />
+                    {diffConfig.label}
                   </span>
                   <span className="time-badge">
-                    <Clock size={12} />
+                    <HugeiconsIcon icon={Clock01Icon} size={12} />
                     {challenge.time_limit_minutes} min
                   </span>
                 </div>
@@ -345,7 +346,7 @@ export default function ChallengesDashboard() {
                 <p className="card-description">{challenge.description}</p>
 
                 <div className="card-companies">
-                  <Building2 size={12} />
+                  <HugeiconsIcon icon={Building02Icon} size={12} />
                   {challenge.companies.slice(0, 4).map((company) => (
                     <span key={company} className="company-tag">{company}</span>
                   ))}
@@ -353,10 +354,10 @@ export default function ChallengesDashboard() {
 
                 <div className="card-meta">
                   <span className="meta-reqs">
-                    <Flame size={12} />
+                    <HugeiconsIcon icon={FireIcon} size={12} />
                     {challenge.functional_requirements.length + challenge.non_functional_requirements.length} requirements
                   </span>
-                  <ChevronRight size={16} className="card-arrow" />
+                  <HugeiconsIcon icon={ChevronRightIcon} size={16} className="card-arrow" />
                 </div>
               </article>
             );

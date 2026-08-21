@@ -3,9 +3,27 @@
  * ============================================
  * Displays AI analysis scores, issues, and positives in a premium modal.
  * Used in the free-form DesignStudio (separate from ChallengeResultModal).
+ * Powered by Hugeicons vector iconography (zero emojis).
  */
 
-import { X, AlertTriangle, AlertCircle, Info, CheckCircle, Sparkles, Target } from 'lucide-react';
+import {
+  Cancel01Icon,
+  TriangleAlertIcon,
+  AlertCircleIcon,
+  InformationCircleIcon,
+  CheckmarkCircle01Icon,
+  SparklesIcon,
+  Target01Icon,
+  Link01Icon,
+  BulbIcon,
+  ChartIncreaseIcon,
+  ShieldCheckIcon,
+  FlashIcon,
+  Coins01Icon,
+  LockPasswordIcon,
+  Wrench01Icon,
+} from '../common/Icon';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import type { AIFeedback } from '../../types';
 import './AIFeedbackModal.css';
 
@@ -14,13 +32,13 @@ interface AIFeedbackModalProps {
   onClose: () => void;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  scalability: '📈 Scalability',
-  reliability: '🛡️ Reliability',
-  performance: '⚡ Performance',
-  cost: '💰 Cost Efficiency',
-  security: '🔒 Security',
-  maintainability: '🔧 Maintainability',
+const CATEGORY_META: Record<string, { label: string; icon: IconSvgElement }> = {
+  scalability:     { label: 'Scalability',     icon: ChartIncreaseIcon },
+  reliability:     { label: 'Reliability',     icon: ShieldCheckIcon },
+  performance:     { label: 'Performance',     icon: FlashIcon },
+  cost:            { label: 'Cost Efficiency', icon: Coins01Icon },
+  security:        { label: 'Security',        icon: LockPasswordIcon },
+  maintainability: { label: 'Maintainability', icon: Wrench01Icon },
 };
 
 export default function AIFeedbackModal({ feedback, onClose }: AIFeedbackModalProps) {
@@ -42,11 +60,11 @@ export default function AIFeedbackModal({ feedback, onClose }: AIFeedbackModalPr
         {/* Header */}
         <div className="aifeedback-header">
           <div className="aifeedback-header-left">
-            <Sparkles size={18} />
+            <HugeiconsIcon icon={SparklesIcon} size={18} />
             <h2>AI Architecture Analysis</h2>
           </div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>
-            <X size={18} />
+            <HugeiconsIcon icon={Cancel01Icon} size={18} />
           </button>
         </div>
 
@@ -59,8 +77,14 @@ export default function AIFeedbackModal({ feedback, onClose }: AIFeedbackModalPr
             </div>
           </div>
           <div className="aifeedback-score-meta">
-            <span><Target size={12} /> {feedback.component_count} components</span>
-            <span>🔗 {feedback.connection_count} connections</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <HugeiconsIcon icon={Target01Icon} size={13} />
+              {feedback.component_count} components
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <HugeiconsIcon icon={Link01Icon} size={13} />
+              {feedback.connection_count} connections
+            </span>
           </div>
         </div>
 
@@ -68,23 +92,29 @@ export default function AIFeedbackModal({ feedback, onClose }: AIFeedbackModalPr
         <div className="aifeedback-categories">
           <h3 className="aifeedback-section-title">Category Breakdown</h3>
           <div className="aifeedback-category-grid">
-            {Object.entries(feedback.categories).map(([key, value]) => (
-              <div key={key} className="aifeedback-category">
-                <div className="aifeedback-category-header">
-                  <span className="aifeedback-category-label">{CATEGORY_LABELS[key] || key}</span>
-                  <span className="aifeedback-category-score">{value}/10</span>
+            {Object.entries(feedback.categories).map(([key, value]) => {
+              const meta = CATEGORY_META[key] || { label: key, icon: SparklesIcon };
+              return (
+                <div key={key} className="aifeedback-category">
+                  <div className="aifeedback-category-header">
+                    <span className="aifeedback-category-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <HugeiconsIcon icon={meta.icon} size={13} />
+                      {meta.label}
+                    </span>
+                    <span className="aifeedback-category-score">{value}/10</span>
+                  </div>
+                  <div className="aifeedback-category-bar">
+                    <div
+                      className="aifeedback-category-fill"
+                      style={{
+                        width: `${(value / 10) * 100}%`,
+                        background: value >= 7 ? 'var(--color-success)' : value >= 4 ? 'var(--color-warning)' : 'var(--color-danger)',
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="aifeedback-category-bar">
-                  <div
-                    className="aifeedback-category-fill"
-                    style={{
-                      width: `${(value / 10) * 100}%`,
-                      background: value >= 7 ? 'var(--color-success)' : value >= 4 ? 'var(--color-warning)' : 'var(--color-danger)',
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -96,14 +126,21 @@ export default function AIFeedbackModal({ feedback, onClose }: AIFeedbackModalPr
               {feedback.issues.map((issue, i) => (
                 <div key={i} className={`aifeedback-issue issue-${issue.severity}`}>
                   <div className="aifeedback-issue-icon">
-                    {issue.severity === 'critical' ? <AlertCircle size={16} /> :
-                     issue.severity === 'warning' ? <AlertTriangle size={16} /> :
-                     <Info size={16} />}
+                    {issue.severity === 'critical' ? (
+                      <HugeiconsIcon icon={AlertCircleIcon} size={16} />
+                    ) : issue.severity === 'warning' ? (
+                      <HugeiconsIcon icon={TriangleAlertIcon} size={16} />
+                    ) : (
+                      <HugeiconsIcon icon={InformationCircleIcon} size={16} />
+                    )}
                   </div>
                   <div className="aifeedback-issue-content">
                     <strong>{issue.title}</strong>
                     <p>{issue.description}</p>
-                    <p className="aifeedback-suggestion">💡 {issue.suggestion}</p>
+                    <p className="aifeedback-suggestion" style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <HugeiconsIcon icon={BulbIcon} size={13} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{issue.suggestion}</span>
+                    </p>
                   </div>
                 </div>
               ))}
@@ -118,7 +155,7 @@ export default function AIFeedbackModal({ feedback, onClose }: AIFeedbackModalPr
             <div className="aifeedback-positives">
               {feedback.positives.map((pos, i) => (
                 <div key={i} className="aifeedback-positive">
-                  <CheckCircle size={16} />
+                  <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} />
                   <div>
                     <strong>{pos.title}</strong>
                     <p>{pos.description}</p>

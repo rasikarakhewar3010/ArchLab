@@ -2,29 +2,17 @@
  * OnboardingTour — Interactive Guided Tour Component
  * =====================================================
  * Renders a step-by-step spotlight tour over the ArchLab UI.
- *
- * Architecture:
- *   The overlay is a simple dark layer at z-index 10000.
- *   The TARGET element is dynamically elevated ABOVE the overlay
- *   (z-index 10001) so it remains crisp and fully visible while
- *   everything else is dimmed beneath the overlay.
- *   The tooltip sits at z-index 10003 above everything.
- *
- * Features:
- *   - Target element elevated above overlay (never blurred)
- *   - Animated glow ring around the target
- *   - Glassmorphic floating tooltip with auto-positioning
- *   - Smooth animated transitions between steps
- *   - Full-screen welcome and completion screens
- *   - Keyboard navigation
- *   - Progress bar + step counter
- *   - localStorage first-visit detection
+ * Powered by Hugeicons.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import * as Icons from 'lucide-react';
-import type { LucideProps } from 'lucide-react';
+import {
+  Icon,
+  ArrowRight01Icon,
+  ArrowLeft01Icon,
+} from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { TOUR_STEPS } from './tourSteps';
 import './OnboardingTour.css';
 
@@ -51,10 +39,8 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
   const [isTransitioning, setIsTransitioning] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
-  // We no longer elevate targets. The cutout is handled by a box-shadow spotlight.
   const step = TOUR_STEPS[currentStep];
   const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === TOUR_STEPS.length - 1;
   const isFullScreen = step.target === null;
 
   /**
@@ -195,29 +181,6 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, currentStep]);
 
-  const goNext = useCallback(() => {
-    if (currentStep < TOUR_STEPS.length - 1) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentStep((s) => s + 1);
-        setIsTransitioning(false);
-      }, 180);
-    } else {
-      handleComplete();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep]);
-
-  const goPrev = useCallback(() => {
-    if (currentStep > 0) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentStep((s) => s - 1);
-        setIsTransitioning(false);
-      }, 180);
-    }
-  }, [currentStep]);
-
   const handleSkip = useCallback(() => {
     localStorage.setItem('archlab-tour-completed', 'true');
     setCurrentStep(0);
@@ -230,9 +193,30 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
     onEnd();
   }, [onEnd]);
 
+  const goNext = useCallback(() => {
+    if (currentStep < TOUR_STEPS.length - 1) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep((s) => s + 1);
+        setIsTransitioning(false);
+      }, 180);
+    } else {
+      handleComplete();
+    }
+  }, [currentStep, handleComplete]);
+
+  const goPrev = useCallback(() => {
+    if (currentStep > 0) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep((s) => s - 1);
+        setIsTransitioning(false);
+      }, 180);
+    }
+  }, [currentStep]);
+
   if (!isActive) return null;
 
-  const IconComp = ((Icons as any)[step.icon] || Icons.HelpCircle) as React.ComponentType<LucideProps>;
   const totalContentSteps = TOUR_STEPS.length - 2; // exclude welcome + completion
   const contentStepIndex = currentStep - 1; // 0-indexed within content steps
   const progressPercent = isFullScreen
@@ -247,7 +231,7 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
         <div className="tour-fullscreen">
           <div className="tour-fullscreen-card">
             <div className="tour-fullscreen-icon">
-              <IconComp size={32} />
+              <Icon name={step.icon} size={32} />
             </div>
             <h2 className="tour-fullscreen-title">{step.title}</h2>
             <p className="tour-fullscreen-desc">{step.description}</p>
@@ -256,7 +240,7 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
                 <>
                   <button className="tour-btn-start" onClick={goNext}>
                     Start Tour
-                    <Icons.ArrowRight size={16} style={{ marginLeft: 8 }} />
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} style={{ marginLeft: 8 }} />
                   </button>
                   <button className="tour-btn tour-btn-ghost" onClick={handleSkip}>
                     Skip
@@ -265,12 +249,12 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
               ) : (
                 <>
                   <button className="tour-btn tour-btn-secondary" onClick={goPrev}>
-                    <Icons.ArrowLeft size={14} />
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
                     Back
                   </button>
                   <button className="tour-btn-start" onClick={handleComplete}>
                     Start Designing
-                    <Icons.ArrowRight size={16} style={{ marginLeft: 8 }} />
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} style={{ marginLeft: 8 }} />
                   </button>
                 </>
               )}
@@ -299,7 +283,7 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
 
   return createPortal(
     <div className="tour-overlay tour-fade-active">
-      {/* Spotlight cutout — creates a dark overlay with a transparent hole for the target using box-shadow */}
+      {/* Spotlight cutout */}
       {targetRect ? (
         <div
           className="tour-spotlight"
@@ -330,7 +314,7 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
           {/* Header */}
           <div className="tour-step-header">
             <div className="tour-step-icon">
-              <IconComp size={18} />
+              <Icon name={step.icon} size={18} />
             </div>
             <span className="tour-step-title">{step.title}</span>
             <span className="tour-step-counter">
@@ -357,13 +341,13 @@ export default function OnboardingTour({ isActive, onEnd }: OnboardingTourProps)
             <div className="tour-actions-right">
               {currentStep > 1 && (
                 <button className="tour-btn tour-btn-secondary" onClick={goPrev}>
-                  <Icons.ArrowLeft size={14} />
+                  <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
                   Back
                 </button>
               )}
               <button className="tour-btn tour-btn-primary" onClick={goNext}>
                 {currentStep === TOUR_STEPS.length - 2 ? 'Finish' : 'Next'}
-                <Icons.ArrowRight size={14} />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
               </button>
             </div>
           </div>

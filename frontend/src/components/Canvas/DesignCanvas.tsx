@@ -33,6 +33,8 @@ import '@xyflow/react/dist/style.css';
 import ArchNodeComponent from './ArchNode';
 import AnimatedEdge from './AnimatedEdge';
 import { COMPONENT_LIBRARY } from '../../data/componentLibrary';
+import { FlashIcon } from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 import type { ArchNodeData } from '../../types';
 import type { EdgeTraffic } from '../../simulation/types';
 import { useDesignWebSocket } from '../../hooks/useDesignWebSocket';
@@ -321,7 +323,9 @@ export default function DesignCanvas({
           {isSimulating && (
             <>
               <span className="stats-divider">·</span>
-              <span className="stats-simulating">⚡ SIMULATING</span>
+              <span className="stats-simulating">
+                <HugeiconsIcon icon={FlashIcon} size={12} className="simulating-icon" /> SIMULATING
+              </span>
             </>
           )}
         </Panel>

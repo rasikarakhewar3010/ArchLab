@@ -8,7 +8,7 @@
  * - A name (human-readable)
  * - A description (tooltip/help text)
  * - A category (for grouping in the palette)
- * - An icon (from Lucide React)
+ * - An icon (from Hugeicons)
  * - A color (mapped to our design system)
  * - Default configuration (properties the user can edit)
  * 
@@ -266,21 +266,30 @@ export const COMPONENT_LIBRARY: ComponentDefinition[] = [
 ];
 
 /** Group components by category for the palette sidebar */
-export const COMPONENT_CATEGORIES: Record<string, { label: string; components: ComponentDefinition[] }> = {};
+export interface ComponentCategoryGroup {
+  label: string;
+  iconName: string;
+  components: ComponentDefinition[];
+}
+
+export const COMPONENT_CATEGORIES: Record<string, ComponentCategoryGroup> = {};
+
+const CATEGORY_META: Record<string, { label: string; iconName: string }> = {
+  frontend: { label: 'Frontend', iconName: 'Monitor' },
+  networking: { label: 'Networking', iconName: 'Globe' },
+  compute: { label: 'Compute', iconName: 'Cpu' },
+  storage: { label: 'Storage', iconName: 'Database' },
+  async: { label: 'Async', iconName: 'Layers' },
+  security: { label: 'Security', iconName: 'Shield' },
+  operations: { label: 'Operations', iconName: 'Activity' },
+};
 
 COMPONENT_LIBRARY.forEach((comp) => {
   if (!COMPONENT_CATEGORIES[comp.category]) {
-    const labels: Record<string, string> = {
-      frontend: '🖥️ Frontend',
-      networking: '🌐 Networking',
-      compute: '⚙️ Compute',
-      storage: '💾 Storage',
-      async: '📬 Async',
-      security: '🔐 Security',
-      operations: '📊 Operations',
-    };
+    const meta = CATEGORY_META[comp.category] || { label: comp.category, iconName: 'Box' };
     COMPONENT_CATEGORIES[comp.category] = {
-      label: labels[comp.category] || comp.category,
+      label: meta.label,
+      iconName: meta.iconName,
       components: [],
     };
   }

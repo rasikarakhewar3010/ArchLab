@@ -23,6 +23,8 @@ import type { ArchNodeData, AIFeedback } from '../types';
 import { useSimulation } from '../hooks/useSimulation';
 import { useAuth } from '../context/AuthContext';
 import { createDesign, updateDesign, getDesign, analyzeDesign } from '../services/api';
+import { CheckmarkCircle01Icon, AlertCircleIcon, SparklesIcon } from '../components/common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 export default function DesignStudio() {
   const [searchParams] = useSearchParams();
@@ -131,17 +133,17 @@ export default function DesignStudio() {
       if (designId) {
         // Update existing design
         await updateDesign(designId, payload);
-        flashSaveMessage('✅ Design saved!');
+        flashSaveMessage('Design saved successfully!');
       } else {
         // Create new design
         const created = await createDesign(payload);
         setDesignId(created.id);
         // Update URL without navigation
         window.history.replaceState(null, '', `/?id=${created.id}`);
-        flashSaveMessage('✅ Design created!');
+        flashSaveMessage('Design created successfully!');
       }
     } catch {
-      flashSaveMessage('❌ Save failed — are you logged in?');
+      flashSaveMessage('Save failed — are you logged in?');
     } finally {
       setIsSaving(false);
     }
@@ -196,7 +198,14 @@ export default function DesignStudio() {
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
           {isSaving && <span className="auth-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />}
-          {isAnalyzing && <span className="auth-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />}
+          {isAnalyzing && <HugeiconsIcon icon={SparklesIcon} size={14} className="animate-pulse" />}
+          {!isSaving && !isAnalyzing && (
+            saveMessage?.includes('failed') ? (
+              <HugeiconsIcon icon={AlertCircleIcon} size={14} primaryColor="var(--color-danger)" />
+            ) : (
+              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} primaryColor="var(--color-success)" />
+            )
+          )}
           {isSaving ? 'Saving...' : isAnalyzing ? 'Analyzing design...' : saveMessage}
         </div>
       )}

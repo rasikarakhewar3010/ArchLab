@@ -4,18 +4,18 @@
  * 
  * This sidebar lists all available architecture components,
  * grouped by category. Users drag components from here onto the canvas.
- * 
- * DRAG & DROP (HTML5 API):
- * 1. onDragStart: Set the component type as drag data
- * 2. User drags to canvas
- * 3. Canvas onDrop reads the data and creates a node
- * 
- * This is the same drag-and-drop API used by Figma, Notion, etc.
+ * Powered by Hugeicons.
  */
 
 import { useState } from 'react';
-import * as Icons from 'lucide-react';
-import type { LucideProps } from 'lucide-react';
+import {
+  Icon,
+  LayoutGridIcon,
+  Search01Icon,
+  ChevronDownIcon,
+  GripVerticalIcon,
+} from '../common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { COMPONENT_CATEGORIES } from '../../data/componentLibrary';
 import type { ComponentDefinition } from '../../types';
 import './ComponentPalette.css';
@@ -56,6 +56,7 @@ export default function ComponentPalette() {
     .map(([key, category]) => ({
       key,
       label: category.label,
+      iconName: category.iconName,
       components: category.components.filter(
         (comp) =>
           comp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,11 +69,11 @@ export default function ComponentPalette() {
     <div className="component-palette" data-tour="component-palette">
       <div className="palette-header">
         <h2 className="palette-title">
-          <Icons.LayoutGrid size={18} />
+          <HugeiconsIcon icon={LayoutGridIcon} size={18} />
           Components
         </h2>
         <div className="palette-search">
-          <Icons.Search size={14} className="search-icon" />
+          <HugeiconsIcon icon={Search01Icon} size={14} className="search-icon" />
           <input
             type="text"
             className="input"
@@ -84,14 +85,18 @@ export default function ComponentPalette() {
       </div>
 
       <div className="palette-body">
-        {filteredCategories.map(({ key, label, components }) => (
+        {filteredCategories.map(({ key, label, iconName, components }) => (
           <div key={key} className="palette-category">
             <button
               className="category-header"
               onClick={() => toggleCategory(key)}
             >
-              <span className="category-label">{label}</span>
-              <Icons.ChevronDown
+              <span className="category-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Icon name={iconName} size={14} />
+                {label}
+              </span>
+              <HugeiconsIcon
+                icon={ChevronDownIcon}
                 size={14}
                 className={`category-chevron ${expandedCategories.has(key) ? 'expanded' : ''}`}
               />
@@ -99,27 +104,23 @@ export default function ComponentPalette() {
 
             {expandedCategories.has(key) && (
               <div className="category-items">
-                {components.map((comp) => {
-                  const IconComponent = ((Icons as any)[comp.icon] || Icons.Box) as React.ComponentType<LucideProps>;
-
-                  return (
+                {components.map((comp) => (
+                  <div
+                    key={comp.type}
+                    className="palette-item"
+                    draggable
+                    onDragStart={(e) => onDragStart(e, comp)}
+                    title={comp.description}
+                  >
                     <div
-                      key={comp.type}
-                      className="palette-item"
-                      draggable
-                      onDragStart={(e) => onDragStart(e, comp)}
-                      title={comp.description}
+                      className="palette-item-icon"
+                      style={{ background: comp.color }}
                     >
-                      <div
-                        className="palette-item-icon"
-                        style={{ background: comp.color }}
-                      >
-                        <IconComponent size={14} />
-                      </div>
-                      <span className="palette-item-name">{comp.name}</span>
+                      <Icon name={comp.icon} size={14} color="#ffffff" />
                     </div>
-                  );
-                })}
+                    <span className="palette-item-name">{comp.name}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -128,7 +129,7 @@ export default function ComponentPalette() {
 
       <div className="palette-footer">
         <p className="palette-hint">
-          <Icons.GripVertical size={12} />
+          <HugeiconsIcon icon={GripVerticalIcon} size={12} />
           Drag components onto the canvas
         </p>
       </div>

@@ -2,15 +2,26 @@
  * MyDesigns — User's Saved Designs Dashboard
  * =============================================
  * Shows all saved designs as cards with AI scores, timestamps, and actions.
+ * Powered by Hugeicons.
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Plus, Trash2, Clock, Sparkles, Layers, ArrowRight,
-  Cpu, Star, Globe, Lock,
-} from 'lucide-react';
+  PlusSignIcon,
+  Delete02Icon,
+  Clock01Icon,
+  SparklesIcon,
+  Layers01Icon,
+  ArrowRight01Icon,
+  ArrowLeft01Icon,
+  StarIcon,
+  GlobalIcon,
+  SecurityLockIcon,
+} from '../components/common/Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
+import BrandLogo from '../components/common/BrandLogo';
 import { getMyDesigns, deleteDesign, type DesignListItem } from '../services/api';
 import './MyDesigns.css';
 
@@ -74,7 +85,7 @@ export default function MyDesigns() {
     return (
       <div className="mydesigns-page">
         <div className="mydesigns-loading">
-          <Sparkles size={24} className="animate-pulse" />
+          <HugeiconsIcon icon={SparklesIcon} size={24} className="animate-pulse" />
           <p>Loading your designs...</p>
         </div>
       </div>
@@ -86,20 +97,18 @@ export default function MyDesigns() {
       {/* Header */}
       <header className="mydesigns-header">
         <div className="mydesigns-header-left">
-          <div className="mydesigns-brand" onClick={() => navigate('/')}>
-            <Cpu size={20} />
-            <span className="mydesigns-brand-text">ArchLab</span>
-          </div>
+          <BrandLogo size="md" onClick={() => navigate('/')} />
           <div className="mydesigns-header-divider" />
           <h1 className="mydesigns-title">My Designs</h1>
           {user && <span className="mydesigns-user-badge">@{user.username}</span>}
         </div>
         <div className="mydesigns-header-right">
           <button className="btn btn-secondary btn-sm" onClick={() => navigate('/')}>
-            ← Back to Studio
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            Back to Studio
           </button>
           <button className="btn btn-primary btn-sm" onClick={() => navigate('/')}>
-            <Plus size={14} />
+            <HugeiconsIcon icon={PlusSignIcon} size={14} />
             New Design
           </button>
         </div>
@@ -110,21 +119,21 @@ export default function MyDesigns() {
         {designs.length === 0 ? (
           <div className="mydesigns-empty">
             <div className="mydesigns-empty-icon">
-              <Layers size={48} />
+              <HugeiconsIcon icon={Layers01Icon} size={48} />
             </div>
             <h2>No designs yet</h2>
             <p>Start building your first system architecture on the canvas!</p>
             <button className="btn btn-primary btn-lg" onClick={() => navigate('/')}>
-              <Plus size={16} />
+              <HugeiconsIcon icon={PlusSignIcon} size={16} />
               Create Your First Design
-              <ArrowRight size={16} />
+              <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
             </button>
           </div>
         ) : (
           <div className="mydesigns-grid">
             {/* New Design Card */}
             <article className="mydesigns-card mydesigns-new-card" onClick={() => navigate('/')}>
-              <Plus size={32} />
+              <HugeiconsIcon icon={PlusSignIcon} size={32} />
               <span>New Design</span>
             </article>
 
@@ -141,14 +150,18 @@ export default function MyDesigns() {
                     design.ai_score >= 60 ? 'score-good' :
                     design.ai_score >= 40 ? 'score-ok' : 'score-low'
                   }`}>
-                    <Sparkles size={10} />
+                    <HugeiconsIcon icon={SparklesIcon} size={10} />
                     {design.ai_score}
                   </div>
                 )}
 
                 {/* Visibility */}
                 <div className="mydesigns-visibility">
-                  {design.is_public ? <Globe size={12} /> : <Lock size={12} />}
+                  {design.is_public ? (
+                    <HugeiconsIcon icon={GlobalIcon} size={12} />
+                  ) : (
+                    <HugeiconsIcon icon={SecurityLockIcon} size={12} />
+                  )}
                 </div>
 
                 {/* Content */}
@@ -159,8 +172,12 @@ export default function MyDesigns() {
 
                 {/* Stats */}
                 <div className="mydesigns-card-stats">
-                  <span><Layers size={12} /> {design.component_count} components</span>
-                  <span><Star size={12} /> {design.stars_count}</span>
+                  <span>
+                    <HugeiconsIcon icon={Layers01Icon} size={12} /> {design.component_count} components
+                  </span>
+                  <span>
+                    <HugeiconsIcon icon={StarIcon} size={12} /> {design.stars_count}
+                  </span>
                 </div>
 
                 {/* Tags */}
@@ -175,7 +192,7 @@ export default function MyDesigns() {
                 {/* Footer */}
                 <div className="mydesigns-card-footer">
                   <span className="mydesigns-date">
-                    <Clock size={11} /> {formatDate(design.updated_at)}
+                    <HugeiconsIcon icon={Clock01Icon} size={11} /> {formatDate(design.updated_at)}
                   </span>
                   <button
                     className="mydesigns-delete-btn"
@@ -183,7 +200,7 @@ export default function MyDesigns() {
                     disabled={deletingId === design.id}
                     title="Delete design"
                   >
-                    <Trash2 size={13} />
+                    <HugeiconsIcon icon={Delete02Icon} size={13} />
                   </button>
                 </div>
               </article>

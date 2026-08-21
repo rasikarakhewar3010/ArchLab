@@ -7,21 +7,24 @@
  *   - Issues list with severity badges
  *   - Positives list
  *   - Retry / Back to Dashboard actions
+ * Powered by Hugeicons.
  */
 
 import {
-  X,
-  Trophy,
-  AlertTriangle,
-  AlertCircle,
-  Info,
-  CheckCircle2,
-  Clock,
-  RotateCcw,
-  ArrowLeft,
-  Boxes,
-  Link2,
-} from 'lucide-react';
+  Cancel01Icon,
+  TrophyIcon,
+  TriangleAlertIcon,
+  AlertCircleIcon,
+  InformationCircleIcon,
+  CheckmarkCircle01Icon,
+  Clock01Icon,
+  RotateLeft01Icon,
+  ArrowLeft01Icon,
+  CubeIcon,
+  Link01Icon,
+  BulbIcon,
+} from '../common/Icon';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import type { Challenge, AIFeedback } from '../../types';
 import './ChallengeResultModal.css';
 
@@ -48,10 +51,10 @@ function getScoreGrade(score: number): { label: string; color: string } {
   return { label: 'Poor', color: 'var(--color-danger)' };
 }
 
-const SEVERITY_CONFIG = {
-  critical: { icon: AlertCircle, color: 'var(--color-danger)', label: 'Critical' },
-  warning:  { icon: AlertTriangle, color: 'var(--color-warning)', label: 'Warning' },
-  info:     { icon: Info, color: 'var(--color-primary)', label: 'Info' },
+const SEVERITY_CONFIG: Record<string, { icon: IconSvgElement; color: string; label: string }> = {
+  critical: { icon: AlertCircleIcon, color: 'var(--color-danger)', label: 'Critical' },
+  warning:  { icon: TriangleAlertIcon, color: 'var(--color-warning)', label: 'Warning' },
+  info:     { icon: InformationCircleIcon, color: 'var(--color-primary)', label: 'Info' },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -78,12 +81,12 @@ export default function ChallengeResultModal({
       <div className="result-modal" onClick={(e) => e.stopPropagation()}>
         {/* Close Button */}
         <button className="modal-close" onClick={onClose}>
-          <X size={18} />
+          <HugeiconsIcon icon={Cancel01Icon} size={18} />
         </button>
 
         {/* Header */}
         <div className="result-header">
-          <Trophy size={24} className="result-trophy" />
+          <HugeiconsIcon icon={TrophyIcon} size={24} className="result-trophy" />
           <h2 className="result-title">Challenge Complete!</h2>
           <p className="result-challenge-name">{challenge.title}</p>
         </div>
@@ -109,15 +112,15 @@ export default function ChallengeResultModal({
           {/* Quick Stats */}
           <div className="result-quick-stats">
             <div className="quick-stat">
-              <Clock size={14} />
+              <HugeiconsIcon icon={Clock01Icon} size={14} />
               <span>{formatTime(timeElapsed)}</span>
             </div>
             <div className="quick-stat">
-              <Boxes size={14} />
+              <HugeiconsIcon icon={CubeIcon} size={14} />
               <span>{feedback.component_count} components</span>
             </div>
             <div className="quick-stat">
-              <Link2 size={14} />
+              <HugeiconsIcon icon={Link01Icon} size={14} />
               <span>{feedback.connection_count} connections</span>
             </div>
           </div>
@@ -153,19 +156,21 @@ export default function ChallengeResultModal({
             <h3 className="result-section-title">Issues Found ({feedback.issues.length})</h3>
             <div className="issues-list">
               {feedback.issues.map((issue, i) => {
-                const config = SEVERITY_CONFIG[issue.severity];
-                const Icon = config.icon;
+                const config = SEVERITY_CONFIG[issue.severity] || SEVERITY_CONFIG.info;
                 return (
                   <div key={i} className="issue-item">
                     <div className="issue-header">
-                      <Icon size={14} style={{ color: config.color }} />
+                      <HugeiconsIcon icon={config.icon} size={14} primaryColor={config.color} />
                       <span className="issue-severity" style={{ color: config.color }}>
                         {config.label}
                       </span>
                       <span className="issue-title">{issue.title}</span>
                     </div>
                     <p className="issue-description">{issue.description}</p>
-                    <p className="issue-suggestion">💡 {issue.suggestion}</p>
+                    <p className="issue-suggestion" style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <HugeiconsIcon icon={BulbIcon} size={13} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{issue.suggestion}</span>
+                    </p>
                   </div>
                 );
               })}
@@ -180,7 +185,7 @@ export default function ChallengeResultModal({
             <div className="positives-list">
               {feedback.positives.map((pos, i) => (
                 <div key={i} className="positive-item">
-                  <CheckCircle2 size={14} className="positive-icon" />
+                  <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} className="positive-icon" />
                   <div>
                     <span className="positive-title">{pos.title}</span>
                     <p className="positive-desc">{pos.description}</p>
@@ -194,11 +199,11 @@ export default function ChallengeResultModal({
         {/* Actions */}
         <div className="result-actions">
           <button className="btn btn-secondary btn-sm" onClick={onRetry}>
-            <RotateCcw size={14} />
+            <HugeiconsIcon icon={RotateLeft01Icon} size={14} />
             Try Again
           </button>
           <button className="btn btn-primary btn-sm" onClick={onBackToDashboard}>
-            <ArrowLeft size={14} />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
             Back to Challenges
           </button>
         </div>
